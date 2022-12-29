@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LiveSplit.ComponentUtil;
 
@@ -69,5 +70,36 @@ namespace LiveSplit.EMUHELP
         public static ulong ULong(this ulong value) => BitConverter.ToUInt64(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
         public static float Float(this float value) => BitConverter.ToSingle(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
         public static double Double(this double value) => BitConverter.ToDouble(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
+
+        public static IEnumerable<dynamic> SetFakeWatchers(MemoryWatcherList Watchers)
+        {
+            foreach (var entry in Watchers)
+            {
+                var type = entry.GetType();
+
+                if (type == typeof(MemoryWatcher<bool>))
+                    yield return new FakeMemoryWatcher<bool>(() => (bool)entry.Current) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<byte>))
+                    yield return new FakeMemoryWatcher<byte>(() => (byte)entry.Current) { Name = entry.Name };
+                else if (type == typeof(FakeMemoryWatcher<sbyte>))
+                    yield return new FakeMemoryWatcher<sbyte>(() => (sbyte)entry.Current) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<short>))
+                    yield return new FakeMemoryWatcher<short>(() => ToLittleEndian.Short((short)entry.Current)) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<ushort>))
+                    yield return new FakeMemoryWatcher<ushort>(() => ToLittleEndian.UShort((ushort)entry.Current)) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<int>))
+                    yield return new FakeMemoryWatcher<int>(() => ToLittleEndian.Int((int)entry.Current)) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<uint>))
+                    yield return new FakeMemoryWatcher<uint>(() => ToLittleEndian.UInt((uint)entry.Current)) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<long>))
+                    yield return new FakeMemoryWatcher<long>(() => ToLittleEndian.Long((long)entry.Current)) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<ulong>))
+                    yield return new FakeMemoryWatcher<ulong>(() => ToLittleEndian.ULong((ulong)entry.Current)) { Name = entry.Name };
+                else if (type == typeof(MemoryWatcher<float>))
+                    yield return new FakeMemoryWatcher<float>(() => ToLittleEndian.Float((float)entry.Current)) { Name = entry.Name };
+                else if (type == typeof(StringWatcher))
+                    yield return new FakeMemoryWatcher<string>(() => (string)entry.Current) { Name = entry.Name };
+            }
+        }
     }
 }
