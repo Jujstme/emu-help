@@ -42,6 +42,11 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Emulators\PS2\Retroarch.cs" />
+    <Compile Include="Emulators\PS2\PCSX2.cs" />
+    <Compile Include="PS2.cs" />
+    <Compile Include="Emulators\Wii\Dolphin.cs" />
+    <Compile Include="Wii.cs" />
     <Compile Include="Emulators\Common\FakeMemoryWatchers.cs" />
     <Compile Include="Emulators\GCN\Dolphin.cs" />
     <Compile Include="GameCube.cs" />

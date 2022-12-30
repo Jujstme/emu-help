@@ -32,21 +32,6 @@ public partial class PS1
             "EmuHawk",
         };
 
-        var emuList = "";
-        foreach (var entry in processNames) emuList += $"\n- {entry}";
-
-        Debug.WriteLine($@"Thank you for using ps1-help, created by Jujstme! For more information, see https://github.com/Jujstme/ps1-help.
-This library contains many features created for helping out ASL developers.
-
-Currently supported PS1 emulators are: {emuList}
-
-If you have any questions, please tag @Jujstme#1111 in the #auto-splitters channel
-of the Speedrun Tool Development Discord server: https://discord.gg/cpYsxz7.
-
-For an example on how to use this helper, have a look at the sample script at:
-https://github.com/Jujstme/Autosplitters/blob/master/Kula%20World/LiveSplit.KulaWorld.asl");
-
-
         GameProcess = new ProcessHook(processNames);
     }
 

@@ -5,11 +5,11 @@ using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
 using System.Linq;
 
-public partial class GCN
+public partial class Wii
 {
     // Stuff that need to be defined in the ASL
     public string[] Gamecodes { get; set; }
-    public Func<IntPtr, MemoryWatcherList> Load { get; set; }
+    public Func<IntPtr, IntPtr, MemoryWatcherList> Load { get; set; }
 
     // Other stuff
     private ProcessHook GameProcess { get; }
@@ -19,9 +19,10 @@ public partial class GCN
     public FakeMemoryWatcherList LittleEndianWatchers { get; private set; }
     public bool IsBigEndian { get; set; } = false;
     private IntPtr MEM1 { get; set; }
+    private IntPtr MEM2 { get; set; }
 
 
-    public GCN()
+    public Wii()
     {
         var processNames = new string[]
         {
@@ -72,8 +73,9 @@ public partial class GCN
                 {
                     var Init = GetWRAM();
                     MEM1 = Init.Item1;
-                    KeepAlive = Init.Item2;
-                    Watchers = Load(MEM1);
+                    MEM2 = Init.Item2;
+                    KeepAlive = Init.Item3;
+                    Watchers = Load(MEM1, MEM2);
                     LittleEndianWatchers = ToLittleEndian.SetFakeWatchers(Watchers);
                     GameProcess.InitStatus = GameInitStatus.Completed;
                 }
@@ -101,7 +103,7 @@ public partial class GCN
 
     public dynamic this[string index] => IsBigEndian ? (dynamic)LittleEndianWatchers.First(w => w.Name == index) : Watchers[index];
 
-    private Tuple<IntPtr, Func<bool>> GetWRAM()
+    private Tuple<IntPtr, IntPtr, Func<bool>> GetWRAM()
     {
         switch (game.ProcessName)
         {
@@ -109,6 +111,6 @@ public partial class GCN
         }
 
         Debugs.Info("  => Unrecognized emulator. Autosplitter will be disabled");
-        return new Tuple<IntPtr, Func<bool>>(IntPtr.Zero, () => true);
+        return new Tuple<IntPtr, IntPtr, Func<bool>>(IntPtr.Zero, IntPtr.Zero, () => true);
     }
 }

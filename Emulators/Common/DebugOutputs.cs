@@ -4,12 +4,12 @@
     {
         public static void Info()
         {
-            System.Diagnostics.Debug.WriteLine("[PS-HELP]");
+            System.Diagnostics.Debug.WriteLine("[EMU-HELP]");
         }
 
         public static void Info(object output)
         {
-            System.Diagnostics.Debug.WriteLine($"[PS-HELP] {output}");
+            System.Diagnostics.Debug.WriteLine($"[EMU-HELP] {output}");
         }
     }
 }

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
-using System.Linq;
 
-public partial class GCN
+public partial class PS2
 {
     // Stuff that need to be defined in the ASL
-    public string[] Gamecodes { get; set; }
+    public Dictionary<string, string> Gamecodes { get; set; }
     public Func<IntPtr, MemoryWatcherList> Load { get; set; }
 
     // Other stuff
@@ -16,16 +16,17 @@ public partial class GCN
     private Func<bool> KeepAlive { get; set; }
     private Process game => GameProcess.Game;
     public MemoryWatcherList Watchers { get; private set; }
-    public FakeMemoryWatcherList LittleEndianWatchers { get; private set; }
-    public bool IsBigEndian { get; set; } = false;
-    private IntPtr MEM1 { get; set; }
+    public string GameRegion { get; private set; }
 
 
-    public GCN()
+    public PS2()
     {
         var processNames = new string[]
         {
-            "Dolphin",
+            "pcsx2",
+            "pcsx2-qtx64",
+            "pcsx2-qtx64-avx2",
+            "retroarch",
         };
 
         GameProcess = new ProcessHook(processNames);
@@ -46,9 +47,19 @@ public partial class GCN
         }
 
         Watchers.UpdateAll(game);
-        LittleEndianWatchers.UpdateAll();
 
-        if (!Gamecodes.Contains(game.ReadString(MEM1, 6, " ")))
+        var codewatchers = new List<MemoryWatcher>();
+        foreach (var entry in Gamecodes.Values) codewatchers.Add(Watchers[entry + "_Gamecode"]);
+        GameRegion = null;
+        foreach (var entry in codewatchers)
+        {
+            if (entry.Current != null && Gamecodes.ContainsKey(entry.Current.ToString()))
+            {
+                GameRegion = Gamecodes[entry.Current.ToString()];
+                break;
+            }
+        }
+        if (GameRegion == null)
             return false;
 
         return true;
@@ -71,10 +82,8 @@ public partial class GCN
                 try
                 {
                     var Init = GetWRAM();
-                    MEM1 = Init.Item1;
                     KeepAlive = Init.Item2;
-                    Watchers = Load(MEM1);
-                    LittleEndianWatchers = ToLittleEndian.SetFakeWatchers(Watchers);
+                    Watchers = Load(Init.Item1);
                     GameProcess.InitStatus = GameInitStatus.Completed;
                 }
                 catch
@@ -99,13 +108,19 @@ public partial class GCN
         GameProcess.Dispose();
     }
 
-    public dynamic this[string index] => IsBigEndian ? (dynamic)LittleEndianWatchers.First(w => w.Name == index) : Watchers[index];
+    public MemoryWatcher this[string index] => Watchers[$"{GameRegion}_{index}"];
+
 
     private Tuple<IntPtr, Func<bool>> GetWRAM()
     {
         switch (game.ProcessName)
         {
-            case "Dolphin": return Dolphin();
+            case "pcsx2":
+            case "pcsx2-qtx64":
+            case "pcsx2-qtx64-avx2":
+               return PCSX2();
+            case "retroarch":
+                return Retroarch();
         }
 
         Debugs.Info("  => Unrecognized emulator. Autosplitter will be disabled");

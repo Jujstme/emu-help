@@ -42,7 +42,15 @@ namespace LiveSplit.EMUHELP
             {
                 foreach (var entry in processNames)
                 {
-                    Game = Process.GetProcessesByName(entry).OrderByDescending(p => p.StartTime).FirstOrDefault(p => !p.HasExited);
+                    try
+                    {
+                        Game = Process.GetProcessesByName(entry).OrderByDescending(p => p.StartTime).FirstOrDefault(p => !p.HasExited);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+
                     if (Game != null)
                     {
                         Game.Exited += CallBackTryConnect;

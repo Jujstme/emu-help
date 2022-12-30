@@ -1,15 +1,32 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LiveSplit.EMUHELP
 {
-    public class FakeMemoryWatcher<T>
+    public class FakeMemoryWatcherList : List<FakeMemoryWatcher>
     {
-        protected readonly Func<T> func = null;
+        public void UpdateAll()
+        {
+            foreach (var watcher in this)
+                watcher.Update();
+        }
+    }
 
-        public T Current { get; protected set; } = default;
-        public T Old { get; protected set; } = default;
-        public bool Changed => !Old.Equals(Current);
+    public abstract class FakeMemoryWatcher
+    {
+        protected readonly object _func;
         public string Name { get; set; }
+        public object Current { get; protected set; }
+        public object Old { get; protected set; }
+        public bool Changed { get; protected set; }
+        public abstract void Update();
+    }
+
+    public class FakeMemoryWatcher<T> : FakeMemoryWatcher
+    {
+        protected readonly new Func<T> _func = null;
+        public new T Current { get; protected set; } = default;
+        public new T Old { get; protected set; } = default;
 
         /// <summary>
         /// Create a new FakeMemoryWatcher object with default values for both .Old and .Current
@@ -20,21 +37,22 @@ namespace LiveSplit.EMUHELP
         /// Create a new FakeMemoryWatcher object and set a function to
         /// automatically get the current value when calling Update()
         /// </summary>
-        /// <param name="func"></param>
-        public FakeMemoryWatcher(Func<T> func)
+        public FakeMemoryWatcher(Func<T> Func)
         {
-            this.func = func;
+            this._func = Func;
         }
 
         /// <summary>
         /// Moves .Current to .Old and runs a previously defined Func to get the new .Current value
         /// </summary>
-        public void Update()
+        public override void Update()
         {
             Old = Current;
 
-            if (func != null)
-                Current = func.Invoke();
+            if (_func != null)
+                Current = _func.Invoke();
+
+            Changed = !Old.Equals(Current);
         }
 
         /// <summary>
@@ -44,6 +62,8 @@ namespace LiveSplit.EMUHELP
         {
             Old = Current;
             Current = newValue;
+
+            Changed = !Old.Equals(Current);
         }
     }
 }
