@@ -14,7 +14,7 @@ public partial class PS2
         Func<bool> keepAlive = () => !game.ReadPointer(WRAMbase).IsZero();
 
         WRAMbase = game.ReadPointer(WRAMbase);
-        LiveSplit.EMUHELP.ExtensionMethods.CheckPtr(WRAMbase);
+        LiveSplit.EMUHELP.ExtensionMethods.ThrowIfZero(WRAMbase);
 
         Debugs.Info("  => Hooked to emulator: PCSX2");
         Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");

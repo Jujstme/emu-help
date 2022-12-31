@@ -10,7 +10,7 @@ public partial class PS1
         int pageCount;
 
         IntPtr WRAMbase = game.MemoryPages(true).LastOrDefault(p => (int)p.RegionSize == 0x80100).BaseAddress;
-        LiveSplit.EMUHELP.ExtensionMethods.CheckPtr(WRAMbase);
+        LiveSplit.EMUHELP.ExtensionMethods.ThrowIfZero(WRAMbase);
         WRAMbase += game.Is64Bit() ? 0x40 : 0x20;
         pageCount = game.MemoryPages(true).Count();
 

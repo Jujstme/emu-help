@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiveSplit.EMUHELP
 {
@@ -10,6 +11,8 @@ namespace LiveSplit.EMUHELP
             foreach (var watcher in this)
                 watcher.Update();
         }
+
+        public FakeMemoryWatcher this[string index] => this.First(w => w.Name == index);
     }
 
     public abstract class FakeMemoryWatcher

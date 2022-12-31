@@ -8,7 +8,7 @@ public partial class PS1
     public Tuple<IntPtr, Func<bool>> Duckstation()
     {
         IntPtr WRAMbase = game.MemoryPages(true).FirstOrDefault(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x200000).BaseAddress;
-        LiveSplit.EMUHELP.ExtensionMethods.CheckPtr(WRAMbase);
+        LiveSplit.EMUHELP.ExtensionMethods.ThrowIfZero(WRAMbase);
 
         Func<bool> checkIfAlive = () => game.ReadBytes(WRAMbase, 1, out _);
 

@@ -99,7 +99,7 @@ public partial class GCN
         GameProcess.Dispose();
     }
 
-    public dynamic this[string index] => IsBigEndian ? (dynamic)LittleEndianWatchers.First(w => w.Name == index) : Watchers[index];
+    public dynamic this[string index] => IsBigEndian ? LittleEndianWatchers[index] : Watchers[index];
 
     private Tuple<IntPtr, Func<bool>> GetWRAM()
     {
