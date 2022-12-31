@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Runtime.InteropServices;
 using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.EMUHELP
@@ -25,7 +25,7 @@ namespace LiveSplit.EMUHELP
         /// </summary>
         /// <param name="ptr"></param>
         /// <exception cref="SigscanFailedException"></exception>
-        public static void CheckPtr(IntPtr ptr)
+        public static void CheckPtr(this IntPtr ptr)
         {
             if (ptr.IsZero())
                 throw new SigscanFailedException();
@@ -64,14 +64,23 @@ namespace LiveSplit.EMUHELP
     /// </summary>
     public static class ToLittleEndian
     {
-        public static short Short(this short value) => BitConverter.ToInt16(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-        public static ushort UShort(this ushort value) => BitConverter.ToUInt16(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-        public static int Int(this int value) => BitConverter.ToInt32(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-        public static uint UInt(this uint value) => BitConverter.ToUInt32(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-        public static long Long(this long value) => BitConverter.ToInt64(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-        public static ulong ULong(this ulong value) => BitConverter.ToUInt64(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-        public static float Float(this float value) => BitConverter.ToSingle(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-        public static double Double(this double value) => BitConverter.ToDouble(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
+        public static T SwapEndian<T>(this T value)
+        {
+            if (value is string || value is bool || value is byte || value is sbyte)
+                return value;
+
+            int rawSize = Marshal.SizeOf(value);
+
+            if (rawSize == 1)
+                return value;
+
+            dynamic output = 0;
+
+            for (int i = 0; i < rawSize; i++)
+                output |= Marshal.ReadByte(value, rawSize - 1 - i) << (i * 8);
+
+            return output;
+        }
 
         /// <summary>
         /// Creates a new FakeMemoryWatcherList from an existing MemoryWatcherList, with each element having it's Current and Old properties with switched endianess.
@@ -83,32 +92,7 @@ namespace LiveSplit.EMUHELP
             var list = new FakeMemoryWatcherList();
 
             foreach (var entry in Watchers)
-            {
-                var type = entry.GetType();
-
-                if (type == typeof(MemoryWatcher<bool>))
-                    list.Add(new FakeMemoryWatcher<bool>(() => (bool)entry.Current) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<byte>))
-                    list.Add(new FakeMemoryWatcher<byte>(() => (byte)entry.Current) { Name = entry.Name });
-                else if (type == typeof(FakeMemoryWatcher<sbyte>))
-                    list.Add(new FakeMemoryWatcher<sbyte>(() => (sbyte)entry.Current) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<short>))
-                    list.Add(new FakeMemoryWatcher<short>(() => Short((short)entry.Current)) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<ushort>))
-                    list.Add(new FakeMemoryWatcher<ushort>(() => UShort((ushort)entry.Current)) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<int>))
-                    list.Add(new FakeMemoryWatcher<int>(() => Int((int)entry.Current)) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<uint>))
-                    list.Add(new FakeMemoryWatcher<uint>(() => UInt((uint)entry.Current)) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<long>))
-                    list.Add(new FakeMemoryWatcher<long>(() => Long((long)entry.Current)) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<ulong>))
-                    list.Add(new FakeMemoryWatcher<ulong>(() => ULong((ulong)entry.Current)) { Name = entry.Name });
-                else if (type == typeof(MemoryWatcher<float>))
-                    list.Add(new FakeMemoryWatcher<float>(() => Float((float)entry.Current)) { Name = entry.Name });
-                else if (type == typeof(StringWatcher))
-                    list.Add(new FakeMemoryWatcher<string>(() => (string)entry.Current) { Name = entry.Name });
-            }
+                list.Add(new FakeMemoryWatcher<dynamic>(() => entry.Current.SwapEndian<dynamic>()) { Name = entry.Name });
 
             return list;
         }
