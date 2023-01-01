@@ -31,6 +31,7 @@ public partial class Genesis
                     if (!WRAMbase.IsZero())
                         break;
                 }
+                WRAMbase.ThrowIfZero();
                 Endianess = Endianess.LittleEndian;
                 checkIfAlive = () => game.ReadBytes(CurrentCore.BaseAddress, 1, out _);
                 break;
