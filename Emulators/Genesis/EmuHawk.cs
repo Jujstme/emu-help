@@ -21,7 +21,7 @@ public partial class Genesis
         SignatureScanner scanner;
         Func<bool> checkIfAlive;
 
-        switch (CurrentCore.ModuleName.ToLower())
+        switch (CurrentCore?.ModuleName.ToLower())
         {
             case "blastem_libretro.dll":
                 foreach (var page in game.MemoryPages().Where(p => (int)p.RegionSize == 0x101000))
