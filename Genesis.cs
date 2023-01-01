@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading.Tasks;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
-using System.Linq;
 
-public partial class Wii
+public class Megadrive : Genesis { }
+public class MegaDrive : Genesis { }
+
+public partial class Genesis
 {
     // Stuff that need to be defined in the ASL
     public string[] Gamecodes { get; set; }
-    public Func<IntPtr, IntPtr, MemoryWatcherList> Load { get; set; }
+    public Func<IntPtr, MemoryWatcherList> Load { get; set; }
 
     // Other stuff
     private ProcessHook GameProcess { get; }
@@ -17,16 +20,21 @@ public partial class Wii
     private Process game => GameProcess.Game;
     public MemoryWatcherList Watchers { get; private set; }
     public FakeMemoryWatcherList LittleEndianWatchers { get; private set; }
-    public Endianess Endianess { get; set; } = Endianess.BigEndian;
-    private IntPtr MEM1 { get; set; }
-    private IntPtr MEM2 { get; set; }
+    public Endianess Endianess = Endianess.LittleEndian;
+    private IntPtr WRAM { get; set; }
 
 
-    public Wii()
+    public Genesis()
     {
         var processNames = new string[]
         {
-            "Dolphin",
+            "retroarch",
+            "SEGAGameRoom",
+            "SEGAGenesisClassics",
+            "Fusion",
+            "gens",
+            "blastem",
+            "EmuHawk",
         };
 
         GameProcess = new ProcessHook(processNames);
@@ -34,7 +42,7 @@ public partial class Wii
 
     public bool Update()
     {
-        if (Gamecodes == null || Load == null)
+        if (/*Gamecodes == null ||*/ Load == null)
             return false;
 
         if (!Init())
@@ -47,10 +55,10 @@ public partial class Wii
         }
 
         Watchers.UpdateAll(game);
-        LittleEndianWatchers.UpdateAll();
+        if (Endianess == Endianess.BigEndian) LittleEndianWatchers.UpdateAll();
 
-        if (!Gamecodes.Contains(game.ReadString(MEM1, 6, " ")))
-            return false;
+        //if (!Gamecodes.Contains(game.ReadString(MEM1, 6, " ")))
+        //    return false;
 
         return true;
     }
@@ -72,11 +80,26 @@ public partial class Wii
                 try
                 {
                     var Init = GetWRAM();
-                    MEM1 = Init.Item1;
-                    MEM2 = Init.Item2;
-                    KeepAlive = Init.Item3;
-                    Watchers = Load(MEM1, MEM2);
-                    LittleEndianWatchers = ToLittleEndian.SetFakeWatchers(Watchers);
+                    WRAM = Init.Item1;
+                    KeepAlive = Init.Item2;
+                    Watchers = Load(WRAM);
+
+                    if (Endianess == Endianess.LittleEndian)
+                    {
+                        foreach (var watcher in Watchers)
+                        {
+                            if (watcher is MemoryWatcher<byte> || watcher is MemoryWatcher<sbyte> || watcher is MemoryWatcher<bool>)
+                            {
+                                var Address = (long)watcher.GetProperty<IntPtr>("Address") - (long)WRAM;
+                                Address = (Address & 1) == 0 ? Address + 1 : Address - 1;
+                                watcher.SetProperty("Address", (IntPtr)((long)WRAM + Address));
+                            }
+                        }
+                    }
+
+                    if (Endianess == Endianess.BigEndian)
+                        LittleEndianWatchers = ToLittleEndian.SetFakeWatchers(Watchers);
+
                     GameProcess.InitStatus = GameInitStatus.Completed;
                 }
                 catch
@@ -103,14 +126,19 @@ public partial class Wii
 
     public dynamic this[string index] => Endianess == Endianess.BigEndian ? LittleEndianWatchers[index] : Watchers[index];
 
-    private Tuple<IntPtr, IntPtr, Func<bool>> GetWRAM()
+    private Tuple<IntPtr, Func<bool>> GetWRAM()
     {
-        switch (game.ProcessName)
+        switch (game.ProcessName.ToLower())
         {
-            case "Dolphin": return Dolphin();
+            case "retroarch": return Retroarch();
+            case "segagenesisclassics": case "segagameroom": return SEGAClassics();
+            case "fusion": return Fusion();
+            case "gens": return Gens();
+            case "blastem": return BlastEm();
+            case "emuhawk": return EmuHawk();
         }
 
         Debugs.Info("  => Unrecognized emulator. Autosplitter will be disabled");
-        return new Tuple<IntPtr, IntPtr, Func<bool>>(IntPtr.Zero, IntPtr.Zero, () => true);
+        return new Tuple<IntPtr, Func<bool>>(IntPtr.Zero, () => true);
     }
 }

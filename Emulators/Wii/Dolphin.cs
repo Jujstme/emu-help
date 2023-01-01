@@ -13,7 +13,7 @@ public partial class Wii
 
         bool checkIfAlive() => game.ReadBytes(MEM1, 1, out _);
 
-        IsBigEndian = true;
+        Endianess = Endianess.BigEndian;
 
         Debugs.Info("  => Hooked to emulator: Dolphin");
         Debugs.Info($"  => MEM1 address found at 0x{MEM1.ToString("X")}");

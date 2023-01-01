@@ -5,6 +5,9 @@ using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
 using System.Linq;
 
+public class Gamecube : GCN { }
+public class GameCube : GCN { }
+
 public partial class GCN
 {
     // Stuff that need to be defined in the ASL

@@ -10,11 +10,11 @@ public partial class PS1
         int pageCount;
 
         IntPtr WRAMbase = game.MemoryPages(true).LastOrDefault(p => (int)p.RegionSize == 0x80100).BaseAddress;
-        LiveSplit.EMUHELP.ExtensionMethods.ThrowIfZero(WRAMbase);
+        WRAMbase.ThrowIfZero();
         WRAMbase += game.Is64Bit() ? 0x40 : 0x20;
         pageCount = game.MemoryPages(true).Count();
 
-        Func<bool> checkIfAlive = () => game.MemoryPages(true).Count() == pageCount;
+        bool checkIfAlive() => game.MemoryPages(true).Count() == pageCount;
 
         Debugs.Info("  => Hooked to emulator: PCSX-Redux");
         Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");

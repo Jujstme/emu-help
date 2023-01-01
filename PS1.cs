@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
 
+public class Playstation : PS1 { }
+
+public class Playstation1 : PS1 { }
+
 public partial class PS1
 {
     // Stuff that need to be defined in the ASL

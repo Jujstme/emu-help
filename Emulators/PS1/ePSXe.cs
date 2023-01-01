@@ -12,6 +12,6 @@ public partial class PS1
         Debugs.Info("  => Hooked to emulator: ePSXe");
         Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
 
-        return Tuple.Create(WRAMbase, (Func<bool>)(() => true));
+        return Tuple.Create(WRAMbase, () => true);
     }
 }

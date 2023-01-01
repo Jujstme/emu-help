@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using LiveSplit.ComponentUtil;
 
@@ -9,7 +14,7 @@ namespace LiveSplit.EMUHELP
     /// <summary>
     /// Custom extension methods.
     /// </summary>
-    public static class ExtensionMethods
+    public static class EmuHelpExtensionMethods
     {
         /// <summary>
         /// Perform a signature scan, similarly to how it would achieve with SignatureScanner.Scan()
@@ -141,5 +146,34 @@ namespace LiveSplit.EMUHELP
 
             return list;
         }
+
+        public static T GetProperty<T>(this object obj, string name)
+        {
+            // Set the flags so that private and public fields from instances will be found
+            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            var field = obj.GetType().GetProperty(name, bindingFlags);
+            return (T)field?.GetValue(obj, null);
+        }
+
+        public static void SetProperty<T>(this object obj, string name, T value)
+        {
+            // Set the flags so that private and public fields from instances will be found
+            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            var field = obj.GetType().GetProperty(name, bindingFlags);
+            field.SetValue(obj, value);
+        }
+
+        public static void ResetModulesWow64Cache(this Process process)
+        {
+            process.Refresh();
+            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            typeof(ExtensionMethods).GetField("ModuleCache", bindingFlags).SetValue(null, new Dictionary<int, ProcessModuleWow64Safe[]>());
+        }
     }
+}
+
+public enum Endianess
+{
+    LittleEndian,
+    BigEndian
 }
