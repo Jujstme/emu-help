@@ -21,13 +21,15 @@ public partial class Genesis
         SignatureScanner scanner;
         Func<bool> checkIfAlive;
 
-        switch (CurrentCore?.ModuleName.ToLower())
+        switch (CurrentCore.ModuleName.ToLower())
         {
             case "blastem_libretro.dll":
                 foreach (var page in game.MemoryPages().Where(p => (int)p.RegionSize == 0x101000))
                 {
                     WRAMbase = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize)
-                        .ScanOrThrow(new SigScanTarget(11, "72 0E 81 E1 FF FF 00 00 66 8B 89 ???????? C3") { OnFound = (p, s, addr) => (IntPtr)p.ReadValue<int>(addr) });
+                        .Scan(new SigScanTarget(11, "72 0E 81 E1 FF FF 00 00 66 8B 89 ???????? C3") { OnFound = (p, s, addr) => (IntPtr)p.ReadValue<int>(addr) });
+                    if (!WRAMbase.IsZero())
+                        break;
                 }
                 Endianess = Endianess.LittleEndian;
                 checkIfAlive = () => game.ReadBytes(CurrentCore.BaseAddress, 1, out _);
