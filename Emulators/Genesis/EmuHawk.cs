@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class Genesis
 {
-    public Tuple<IntPtr, Func<bool>> EmuHawk()
+    private Tuple<IntPtr, Func<bool>> EmuHawk()
     {
         var supportedCores = new string[]
         {

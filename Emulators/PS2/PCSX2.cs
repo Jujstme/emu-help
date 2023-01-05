@@ -4,7 +4,7 @@ using LiveSplit.EMUHELP;
 
 public partial class PS2
 {
-    public Tuple<IntPtr, Func<bool>> PCSX2()
+    private Tuple<IntPtr, Func<bool>> PCSX2()
     {
         var scanner = new SignatureScanner(game, game.MainModuleWow64Safe().BaseAddress, game.MainModuleWow64Safe().ModuleMemorySize);
         IntPtr WRAMbase = WRAMbase = game.Is64Bit()

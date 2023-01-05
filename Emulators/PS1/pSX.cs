@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class PS1
 {
-    public Tuple<IntPtr, Func<bool>> pSX()
+    private Tuple<IntPtr, Func<bool>> pSX()
     {
         IntPtr WRAMbase = game.MemoryPages(true).FirstOrDefault(p => p.Type == MemPageType.MEM_PRIVATE && (int)p.RegionSize == 0x201000).BaseAddress;
         WRAMbase.ThrowIfZero();

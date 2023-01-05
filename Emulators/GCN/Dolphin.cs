@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class GCN
 {
-    public Tuple<IntPtr, Func<bool>> Dolphin()
+    private Tuple<IntPtr, Func<bool>> Dolphin()
     {
         IntPtr MEM1 = game.MemoryPages(true).First(p => p.Type == MemPageType.MEM_MAPPED && p.State == MemPageState.MEM_COMMIT && (int)p.RegionSize == 0x2000000).BaseAddress;
 

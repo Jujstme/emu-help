@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class Genesis
 {
-    public Tuple<IntPtr, Func<bool>> BlastEm()
+    private Tuple<IntPtr, Func<bool>> BlastEm()
     {
         Endianess = Endianess.LittleEndian;
 

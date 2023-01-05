@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class Genesis
 {
-    public Tuple<IntPtr, Func<bool>> Retroarch()
+    private Tuple<IntPtr, Func<bool>> Retroarch()
     {
         var supportedCores = new string[]
         {

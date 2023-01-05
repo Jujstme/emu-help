@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class PS1
 {
-    public Tuple<IntPtr, Func<bool>> Duckstation()
+    private Tuple<IntPtr, Func<bool>> Duckstation()
     {
         IntPtr WRAMbase = game.MemoryPages(true).FirstOrDefault(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x200000).BaseAddress;
         WRAMbase.ThrowIfZero();

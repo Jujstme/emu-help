@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class SMS
 {
-    public Tuple<IntPtr, Func<bool>> EmuHawk()
+    private Tuple<IntPtr, Func<bool>> EmuHawk()
     {
         IntPtr entryPoint = IntPtr.Zero;
         IntPtr entryPoint2 = IntPtr.Zero;

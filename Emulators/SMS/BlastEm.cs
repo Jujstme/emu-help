@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class SMS
 {
-    public Tuple<IntPtr, Func<bool>> BlastEm()
+    private Tuple<IntPtr, Func<bool>> BlastEm()
     {
         IntPtr WRAMbase = IntPtr.Zero;
 

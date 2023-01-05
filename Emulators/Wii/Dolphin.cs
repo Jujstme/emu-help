@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class Wii
 {
-    public Tuple<IntPtr, IntPtr, Func<bool>> Dolphin()
+    private Tuple<IntPtr, IntPtr, Func<bool>> Dolphin()
     {
         IntPtr MEM1 = game.MemoryPages(true).First(p => p.Type == MemPageType.MEM_MAPPED && p.State == MemPageState.MEM_COMMIT && (int)p.RegionSize == 0x2000000).BaseAddress;
         IntPtr MEM2 = game.MemoryPages(true).First(p => p.Type == MemPageType.MEM_MAPPED && p.State == MemPageState.MEM_COMMIT && (int)p.RegionSize == 0x4000000).BaseAddress;

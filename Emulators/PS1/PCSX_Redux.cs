@@ -5,7 +5,7 @@ using LiveSplit.EMUHELP;
 
 public partial class PS1
 {
-    public Tuple<IntPtr, Func<bool>> PCSX_Redux()
+    private Tuple<IntPtr, Func<bool>> PCSX_Redux()
     {
         int pageCount;
 

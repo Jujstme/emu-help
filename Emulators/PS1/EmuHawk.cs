@@ -6,7 +6,7 @@ using LiveSplit.EMUHELP;
 
 public partial class PS1
 {
-    public Tuple<IntPtr, Func<bool>> EmuHawk()
+    private Tuple<IntPtr, Func<bool>> EmuHawk()
     {
         var SupportedCores = new Dictionary<string, Tuple<int, int>>
         {
