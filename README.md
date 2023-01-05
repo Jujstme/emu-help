@@ -67,7 +67,7 @@ startup
     {
         new MemoryWatcher<byte>(wram + 0x12AA) { Name = "Lives" },
         new StringWatcher(wram + 0x2AA10) { Name = "Level" },
-    })
+    });
 }
 ```
 
@@ -82,7 +82,7 @@ startup
     {
         new MemoryWatcher<int>(MEM1 + 0xA1670) { Name = "IGT" },
         new StringWatcher(MEM2 + 0x2000) { Name = "Status" },
-    })
+    });
 }
 ```
 
