@@ -43,6 +43,7 @@ update
     // Your code goes here
     ...
 }
+```
 
 The following code also needs to be added in `shutdown` in order to allow the routines inside emu-help to terminate properly when the autosplitter is disposed.
 
