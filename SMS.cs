@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
 
-public class Playstation : PS1 { }
+public class MasterSystem : SMS { }
+public class SegaMasterSystem : Genesis { }
 
-public class Playstation1 : PS1 { }
-
-public partial class PS1
+public partial class SMS
 {
     // Stuff that need to be defined in the ASL
-    public Dictionary<string, string> Gamecodes { get; set; }
     public Func<IntPtr, MemoryWatcherList> Load { get; set; }
 
     // Other stuff
@@ -20,19 +17,15 @@ public partial class PS1
     private Func<bool> KeepAlive { get; set; }
     private Process game => GameProcess.Game;
     public MemoryWatcherList Watchers { get; private set; }
-    public string GameRegion { get; private set; }
-    
 
-    public PS1()
+
+    public SMS()
     {
         var processNames = new string[]
         {
-            "ePSXe",
-            "psxfin",
-            "duckstation-qt-x64-ReleaseLTCG", "duckstation-nogui-x64-ReleaseLTCG",
             "retroarch",
-            "pcsx-redux.main",
-            "xebra",
+            "blastem",
+            "Fusion",
             "EmuHawk",
         };
 
@@ -54,29 +47,6 @@ public partial class PS1
         }
 
         Watchers.UpdateAll(game);
-
-        if (Gamecodes != null)
-        {
-            var codewatchers = new List<MemoryWatcher>();
-
-            foreach (var entry in Gamecodes.Values)
-                codewatchers.Add(Watchers[entry + "_Gamecode"]);
-
-            GameRegion = null;
-
-            foreach (var entry in codewatchers)
-            {
-                if (entry.Current != null && Gamecodes.ContainsKey(entry.Current.ToString()))
-                {
-                    GameRegion = Gamecodes[entry.Current.ToString()];
-                    break;
-                }
-            }
-            if (GameRegion == null)
-                return false;
-        }
-
-
         return true;
     }
 
@@ -123,23 +93,19 @@ public partial class PS1
         GameProcess.Dispose();
     }
 
-    public MemoryWatcher this[string index] => Gamecodes == null ? Watchers[index] : Watchers[$"{GameRegion}_{index}"];
-
+    public dynamic this[string index] => Watchers[index];
 
     private Tuple<IntPtr, Func<bool>> GetWRAM()
     {
-        switch (game.ProcessName)
+        switch (game.ProcessName.ToLower())
         {
-            case "ePSXe": return ePSXe();
-            case "psxfin": return pSX();
-            case "duckstation-qt-x64-ReleaseLTCG": case "duckstation-nogui-x64-ReleaseLTCG": return Duckstation();
             case "retroarch": return Retroarch();
-            case "pcsx-redux.main": return PCSX_Redux();
-            case "xebra": return Xebra();
-            case "EmuHawk": return EmuHawk();
+            case "blastem": return BlastEm();
+            case "fusion": return Fusion();
+            case "emuhawk": return EmuHawk();
         }
 
         Debugs.Info("  => Unrecognized emulator. Autosplitter will be disabled");
-        return new Tuple<IntPtr, Func<bool>>( IntPtr.Zero, () => true );
+        return new Tuple<IntPtr, Func<bool>>(IntPtr.Zero, () => true);
     }
 }

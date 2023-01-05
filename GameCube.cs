@@ -36,7 +36,7 @@ public partial class GCN
 
     public bool Update()
     {
-        if (Gamecodes == null || Load == null)
+        if (Load == null)
             return false;
 
         if (!Init())
@@ -51,7 +51,7 @@ public partial class GCN
         Watchers.UpdateAll(game);
         LittleEndianWatchers.UpdateAll();
 
-        if (!Gamecodes.Contains(game.ReadString(MEM1, 6, " ")))
+        if (Gamecodes != null && !Gamecodes.Contains(game.ReadString(MEM1, 6, " ")))
             return false;
 
         return true;

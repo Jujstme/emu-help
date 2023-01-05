@@ -44,12 +44,17 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Emulators\SMS\BlastEm.cs" />
+    <Compile Include="Emulators\SMS\Retroarch.cs" />
+    <Compile Include="Emulators\SMS\Fusion.cs" />
+    <Compile Include="SMS.cs" />
     <Compile Include="Emulators\Genesis\BlastEm.cs" />
     <Compile Include="Emulators\Genesis\Retroarch.cs" />
     <Compile Include="Emulators\Genesis\SEGAClassics.cs" />
     <Compile Include="Emulators\Genesis\Fusion.cs" />
     <Compile Include="Emulators\Genesis\Gens.cs" />
     <Compile Include="Emulators\Genesis\EmuHawk.cs" />
+    <Compile Include="Emulators\SMS\EmuHawk.cs" />
     <Compile Include="Genesis.cs" />
     <Compile Include="Emulators\PS2\Retroarch.cs" />
     <Compile Include="Emulators\PS2\PCSX2.cs" />

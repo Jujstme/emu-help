@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.EMUHELP
@@ -57,6 +58,21 @@ namespace LiveSplit.EMUHELP
         public static bool IsZero(this IntPtr value)
         {
             return value == IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Quickly creates a new SignatureScanner based on the selected process. This will automatically set up for sigscanning in the MainModule
+        /// </summary>
+        /// <param name="process"></param>
+        /// <returns></returns>
+        public static SignatureScanner SigScan(this Process process)
+        {
+            return new SignatureScanner(process, process.MainModuleWow64Safe().BaseAddress, process.MainModuleWow64Safe().ModuleMemorySize);
+        }
+
+        public static SignatureScanner SigScan(this Process process, ProcessModuleWow64Safe module)
+        {
+            return new SignatureScanner(process, module.BaseAddress, module.ModuleMemorySize);
         }
     }
 

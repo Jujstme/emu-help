@@ -10,7 +10,6 @@ public class MegaDrive : Genesis { }
 public partial class Genesis
 {
     // Stuff that need to be defined in the ASL
-    public string[] Gamecodes { get; set; }
     public Func<IntPtr, MemoryWatcherList> Load { get; set; }
 
     // Other stuff
@@ -41,7 +40,7 @@ public partial class Genesis
 
     public bool Update()
     {
-        if (/*Gamecodes == null ||*/ Load == null)
+        if (Load == null)
             return false;
 
         if (!Init())
@@ -54,10 +53,9 @@ public partial class Genesis
         }
 
         Watchers.UpdateAll(game);
-        if (Endianess == Endianess.BigEndian) LittleEndianWatchers.UpdateAll();
 
-        //if (!Gamecodes.Contains(game.ReadString(MEM1, 6, " ")))
-        //    return false;
+        if (Endianess == Endianess.BigEndian)
+            LittleEndianWatchers.UpdateAll();
 
         return true;
     }

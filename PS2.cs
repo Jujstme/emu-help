@@ -36,7 +36,7 @@ public partial class PS2
 
     public bool Update()
     {
-        if (Gamecodes == null || Load == null)
+        if (Load == null)
             return false;
 
         if (!Init())
@@ -50,19 +50,26 @@ public partial class PS2
 
         Watchers.UpdateAll(game);
 
-        var codewatchers = new List<MemoryWatcher>();
-        foreach (var entry in Gamecodes.Values) codewatchers.Add(Watchers[entry + "_Gamecode"]);
-        GameRegion = null;
-        foreach (var entry in codewatchers)
+        if (Gamecodes != null)
         {
-            if (entry.Current != null && Gamecodes.ContainsKey(entry.Current.ToString()))
+            var codewatchers = new List<MemoryWatcher>();
+
+            foreach (var entry in Gamecodes.Values)
+                codewatchers.Add(Watchers[entry + "_Gamecode"]);
+
+            GameRegion = null;
+
+            foreach (var entry in codewatchers)
             {
-                GameRegion = Gamecodes[entry.Current.ToString()];
-                break;
+                if (entry.Current != null && Gamecodes.ContainsKey(entry.Current.ToString()))
+                {
+                    GameRegion = Gamecodes[entry.Current.ToString()];
+                    break;
+                }
             }
+            if (GameRegion == null)
+                return false;
         }
-        if (GameRegion == null)
-            return false;
 
         return true;
     }
@@ -110,7 +117,7 @@ public partial class PS2
         GameProcess.Dispose();
     }
 
-    public MemoryWatcher this[string index] => Watchers[$"{GameRegion}_{index}"];
+    public MemoryWatcher this[string index] => Gamecodes == null ? Watchers[index] : Watchers[$"{GameRegion}_{index}"];
 
 
     private Tuple<IntPtr, Func<bool>> GetWRAM()
