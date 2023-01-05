@@ -79,7 +79,7 @@ startup
 {
     ...
 
-    vars.Helper.Load = (Func<IntPtr, MemoryWatcherList>)(MEM1, MEM2 => new MemoryWatcherList
+    vars.Helper.Load = (Func<IntPtr, IntPtr, MemoryWatcherList>)(MEM1, MEM2 => new MemoryWatcherList
     {
         new MemoryWatcher<int>(MEM1 + 0xA1670) { Name = "IGT" },
         new StringWatcher(MEM2 + 0x2000) { Name = "Status" },
