@@ -1,29 +1,19 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
+using System.Linq;
 
 public class Playstation2 : PS2 { }
 
-public partial class PS2
+public partial class PS2 : EmuBase
 {
-    // Stuff that need to be defined in the ASL
     public Dictionary<string, string> Gamecodes { get; set; }
-    public Func<IntPtr, MemoryWatcherList> Load { get; set; }
-
-    // Other stuff
-    private ProcessHook GameProcess { get; }
-    private Func<bool> KeepAlive { get; set; }
-    private Process game => GameProcess.Game;
-    public MemoryWatcherList Watchers { get; private set; }
     public string GameRegion { get; private set; }
-
 
     public PS2()
     {
-        var processNames = new string[]
+        EmulatorNames = new string[]
         {
             "pcsx2",
             "pcsx2-qtx64",
@@ -31,42 +21,27 @@ public partial class PS2
             "retroarch",
         };
 
-        GameProcess = new ProcessHook(processNames);
+        GameProcess = new ProcessHook(EmulatorNames);
     }
 
-    public bool Update()
+    public new bool Update()
     {
-        if (Load == null)
+        if (!base.Update())
             return false;
-
-        if (!Init())
-            return false;
-
-        if (!KeepAlive())
-        {
-            GameProcess.InitStatus = GameInitStatus.NotStarted;
-            return false;
-        }
-
-        Watchers.UpdateAll(game);
 
         if (Gamecodes != null)
         {
-            var codewatchers = new List<MemoryWatcher>();
-
-            foreach (var entry in Gamecodes.Values)
-                codewatchers.Add(Watchers[entry + "_Gamecode"]);
-
             GameRegion = null;
 
-            foreach (var entry in codewatchers)
+            foreach (var entry in Watchers.Where(w => w is StringWatcher && w.Name.Contains("_Gamecode")))
             {
-                if (entry.Current != null && Gamecodes.ContainsKey(entry.Current.ToString()))
+                if (entry.Current != null && Gamecodes.ContainsKey((string)entry.Current))
                 {
-                    GameRegion = Gamecodes[entry.Current.ToString()];
+                    GameRegion = Gamecodes[(string)entry.Current];
                     break;
                 }
             }
+
             if (GameRegion == null)
                 return false;
         }
@@ -74,65 +49,18 @@ public partial class PS2
         return true;
     }
 
-    private bool Init()
+    protected override void InitActions()
     {
-        // This "init" function checks if the autosplitter has connected to the game
-        // (if it has not, there's no point in going further) and starts a Task to
-        // get the needed memory addresses for the other methods.
-        if (!GameProcess.IsGameHooked)
-            return false;
-
-        // The purpose of this task is to limit the update cycle to 1 every 1.5 seconds
-        // (instead of the usual one every 16 msec) in order to avoid wasting resources
-        if (GameProcess.InitStatus == GameInitStatus.NotStarted)
-            Task.Run(() =>
-            {
-                GameProcess.InitStatus = GameInitStatus.InProgress;
-                try
-                {
-                    var Init = GetWRAM();
-                    KeepAlive = Init.Item2;
-                    Watchers = Load(Init.Item1);
-                    GameProcess.InitStatus = GameInitStatus.Completed;
-                }
-                catch
-                {
-                    Task.Delay(2000).Wait();
-                    GameProcess.InitStatus = GameInitStatus.NotStarted;
-                }
-                // I'm running this manually because the signature scanner, especially
-                // if it runs several times, can take A LOT of memory, to the point of
-                // filling your RAM with several GB of useless data that doesn't get
-                // collected for some reason.
-                GC.Collect();
-            });
-
-        // At this point, if init has not been completed yet, return
-        // false to avoid running the rest of the splitting logic.
-        return GameProcess.InitStatus == GameInitStatus.Completed;
-    }
-
-    public void Dispose()
-    {
-        GameProcess.Dispose();
-    }
-
-    public MemoryWatcher this[string index] => Gamecodes == null ? Watchers[index] : Watchers[$"{GameRegion}_{index}"];
-
-
-    private Tuple<IntPtr, Func<bool>> GetWRAM()
-    {
-        switch (game.ProcessName)
+        var Init = game.ProcessName.ToLower() switch
         {
-            case "pcsx2":
-            case "pcsx2-qtx64":
-            case "pcsx2-qtx64-avx2":
-               return PCSX2();
-            case "retroarch":
-                return Retroarch();
-        }
+            "pcsx2" or "pcsx2-qtx64" or "pcsx2-qtx64-avx2" => PCSX2(),
+            "retroarch" => Retroarch(),
+            _ => throw new NotImplementedException()
+        };
 
-        Debugs.Info("  => Unrecognized emulator. Autosplitter will be disabled");
-        return new Tuple<IntPtr, Func<bool>>(IntPtr.Zero, () => true);
+        KeepAlive = Init.Item2;
+        Watchers = Load(Init.Item1);
     }
+
+    public new MemoryWatcher this[string index] => Gamecodes == null ? Watchers[index] : Watchers[$"{GameRegion}_{index}"];
 }

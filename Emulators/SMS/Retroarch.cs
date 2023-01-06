@@ -29,21 +29,21 @@ public partial class SMS
             case "genesis_plus_gx_libretro.dll":
             case "genesis_plus_gx_wide_libretro.dll":
                 WRAMbase = game.Is64Bit()
-                    ? game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(3, "48 8D 0D ???????? 4C 8B 2D ????????") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) })
-                    : game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(1, "A3 ???????? 29 F9") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+                    ? game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(3, "48 8D 0D ???????? 4C 8B 2D ????????") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) })
+                    : game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(1, "A3 ???????? 29 F9") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
                 break;
 
             case "picodrive_libretro.dll":
                 WRAMbase = game.Is64Bit()
-                    ? game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(3, "48 8D 0D ???????? 41 B8 ????????") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) })
-                    : game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(1, "B9 ???????? C1 EF 10") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+                    ? game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(3, "48 8D 0D ???????? 41 B8 ????????") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) })
+                    : game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(1, "B9 ???????? C1 EF 10") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
                 WRAMbase += 0x20000;
                 break;
 
             case "smsplus_libretro.dll":
                 WRAMbase = game.Is64Bit()
-                    ? game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(5, "31 F6 48 C7 05") { OnFound = (p, s, addr) => addr + 0x8 + p.ReadValue<int>(addr) })
-                    : game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(4, "83 FA 02 B8") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+                    ? game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(5, "31 F6 48 C7 05") { OnFound = (p, s, addr) => addr + 0x8 + p.ReadValue<int>(addr) })
+                    : game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(4, "83 FA 02 B8") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
                 break;
 
             case "gearsystem_libretro.dll":
@@ -51,7 +51,7 @@ public partial class SMS
                 switch (game.Is64Bit())
                 {
                     case true:
-                        entryPoint = game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(1, "77 2B 0F B7 DA") { OnFound = (p, s, addr) => addr + p.ReadValue<byte>(addr) + 1 });
+                        entryPoint = game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(1, "77 2B 0F B7 DA") { OnFound = (p, s, addr) => addr + p.ReadValue<byte>(addr) + 1 });
                         switch (game.ReadValue<byte>(entryPoint))
                         {
                             case 0x51: // process already injected
@@ -87,7 +87,7 @@ public partial class SMS
                         break;
 
                     default:
-                        entryPoint = game.SigScan(CurrentCore).ScanOrThrow(new SigScanTarget(1, "77 ?? 0F B7 DB 81 EB") { OnFound = (p, s, addr) => addr + p.ReadValue<byte>(addr) + 4 });
+                        entryPoint = game.SigScanner(CurrentCore).ScanOrThrow(new SigScanTarget(1, "77 ?? 0F B7 DB 81 EB") { OnFound = (p, s, addr) => addr + p.ReadValue<byte>(addr) + 4 });
                         switch (game.ReadValue<byte>(entryPoint))
                         {
                             case 0x0F: // Not yet injected

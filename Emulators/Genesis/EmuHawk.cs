@@ -38,7 +38,7 @@ public partial class Genesis
 
             case "genesis_plus_gx_libretro.dll":
             case "genesis_plus_gx_wide_libretro.dll":
-                scanner = game.SigScan(CurrentCore); //new SignatureScanner(game, CurrentCore.BaseAddress, CurrentCore.ModuleMemorySize);
+                scanner = game.SigScanner(CurrentCore); //new SignatureScanner(game, CurrentCore.BaseAddress, CurrentCore.ModuleMemorySize);
                 WRAMbase = game.Is64Bit()
                     ? scanner.ScanOrThrow(new SigScanTarget(3, "48 8D 0D ???????? 4C 8B 2D ????????") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) })
                     : scanner.ScanOrThrow(new SigScanTarget(1, "A3 ???????? 29 F9") { OnFound = (p, s, addr) => p.ReadPointer(addr) });

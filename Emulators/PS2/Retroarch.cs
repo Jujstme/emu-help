@@ -18,7 +18,7 @@ public partial class PS2
 
         IntPtr WRAMbase = game.MemoryPages(true).First(p => p.AllocationProtect == MemPageProtect.PAGE_NOACCESS && (int)p.RegionSize == SupportedCores[CurrentCore.ModuleName.ToLower()]).BaseAddress;
 
-        Func<bool> checkIfAlive = () => game.ReadBytes(CurrentCore.BaseAddress, 1, out _);
+        bool checkIfAlive() => game.ReadBytes(CurrentCore.BaseAddress, 1, out _);
 
         Debugs.Info("  => Hooked to emulator: Retroarch");
         Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");

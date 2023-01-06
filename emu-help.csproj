@@ -44,6 +44,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\EmuBase.cs" />
     <Compile Include="Emulators\SMS\BlastEm.cs" />
     <Compile Include="Emulators\SMS\Retroarch.cs" />
     <Compile Include="Emulators\SMS\Fusion.cs" />
@@ -61,7 +62,7 @@
     <Compile Include="PS2.cs" />
     <Compile Include="Emulators\Wii\Dolphin.cs" />
     <Compile Include="Wii.cs" />
-    <Compile Include="Emulators\Common\FakeMemoryWatchers.cs" />
+    <Compile Include="Common\FakeMemoryWatchers.cs" />
     <Compile Include="Emulators\GCN\Dolphin.cs" />
     <Compile Include="GameCube.cs" />
     <Compile Include="Emulators\PS1\EmuHawk.cs" />
@@ -70,10 +71,10 @@
     <Compile Include="Emulators\PS1\Retroarch.cs" />
     <Compile Include="Emulators\PS1\pSX.cs" />
     <Compile Include="Emulators\PS1\Duckstation.cs" />
-    <Compile Include="Emulators\Common\Methods.cs" />
+    <Compile Include="Common\Methods.cs" />
     <Compile Include="Emulators\PS1\ePSXe.cs" />
-    <Compile Include="Emulators\Common\DebugOutputs.cs" />
-    <Compile Include="Emulators\Common\ProcessHook.cs" />
+    <Compile Include="Common\DebugOutputs.cs" />
+    <Compile Include="Common\ProcessHook.cs" />
     <Compile Include="PS1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -9,7 +9,7 @@ namespace LiveSplit.EMUHELP
     /// <summary>
     /// Custom class with the ability to automatically hook to a target process using Tasks
     /// </summary>
-    class ProcessHook
+    public class ProcessHook
     {
         // Internal stuff
         private readonly string[] processNames;
@@ -78,7 +78,7 @@ namespace LiveSplit.EMUHELP
         }
     }
 
-    enum GameInitStatus
+    public enum GameInitStatus
     {
         NotStarted,
         InProgress,

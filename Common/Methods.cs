@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Policy;
 using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.EMUHELP
@@ -40,37 +35,55 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// Checks is a specific bit inside a byte value is set or not.
+        /// Checks whether a specific bit inside a byte value is set or not.
         /// </summary>
         /// <param name="value">The byte value in which to perform the check</param>
-        /// <param name="bitPos">The bit position. Can range from 0 to 7: any value outside this range will make the function automatically return false.</param>
-        /// <returns></returns>
+        /// <param name="bitPos">The bit position (from 0 to 7).</param>
+        /// <returns>True if the bit is set, otherwise false.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Will be thrown if a bit was specified in a position outside the allowed interval.</exception>
         public static bool BitCheck(this byte value, byte bitPos)
         {
-            return bitPos >= 0 && bitPos <= 7 && (value & (1 << bitPos)) != 0;
+            if (bitPos < 0 || bitPos > 7)
+                throw new ArgumentOutOfRangeException();
+            return (value & (1 << bitPos)) != 0;
         }
 
         /// <summary>
         /// Checks if a provided IntPtr value is equal to IntPtr.Zero
         /// </summary>
         /// <param name="value"></param>
-        /// <returns>True is the value is IntPtr.Zero, false otherwise.</returns>
+        /// <returns>True if the value is IntPtr.Zero, false otherwise.</returns>
         public static bool IsZero(this IntPtr value)
         {
             return value == IntPtr.Zero;
         }
 
         /// <summary>
-        /// Quickly creates a new SignatureScanner based on the selected process. This will automatically set up for sigscanning in the MainModule
+        /// Quickly creates a new SignatureScanner object. If no argument is specified, sigscanning will be performed in the MainModule memory space.
         /// </summary>
         /// <param name="process"></param>
         /// <returns></returns>
-        public static SignatureScanner SigScan(this Process process)
+        public static SignatureScanner SigScanner(this Process process)
         {
             return new SignatureScanner(process, process.MainModuleWow64Safe().BaseAddress, process.MainModuleWow64Safe().ModuleMemorySize);
         }
 
-        public static SignatureScanner SigScan(this Process process, ProcessModuleWow64Safe module)
+        /// <summary>
+        /// Quickly creates a new SignatureScanner object.
+        /// </summary>
+        /// <param name="process"></param>
+        /// <returns></returns>
+        public static SignatureScanner SigScanner(this Process process, ProcessModuleWow64Safe module)
+        {
+            return new SignatureScanner(process, module.BaseAddress, module.ModuleMemorySize);
+        }
+
+        /// <summary>
+        /// Quickly creates a new SignatureScanner object.
+        /// </summary>
+        /// <param name="process"></param>
+        /// <returns></returns>
+        public static SignatureScanner SigScanner(this Process process, ProcessModule module)
         {
             return new SignatureScanner(process, module.BaseAddress, module.ModuleMemorySize);
         }
@@ -186,10 +199,11 @@ namespace LiveSplit.EMUHELP
             typeof(ExtensionMethods).GetField("ModuleCache", bindingFlags).SetValue(null, new Dictionary<int, ProcessModuleWow64Safe[]>());
         }
     }
+
+    public enum Endianess
+    {
+        LittleEndian,
+        BigEndian
+    }
 }
 
-public enum Endianess
-{
-    LittleEndian,
-    BigEndian
-}
