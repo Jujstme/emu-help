@@ -87,10 +87,12 @@ startup
 }
 ```
 
-Playstation 1, Playstation 2, Gamecube and Wii also have an internal `Gamecode` that can be defined in order to differentiate between PAL / NTSC releases. For a couple of examples, have a look at those two examples:
+Playstation 1, Playstation 2, Gamecube and Wii also have an internal `Gamecode` that can be defined in order to differentiate between PAL / NTSC releases. For a couple of examples, have a look at those:
 - <a href=https://github.com/Jujstme/Autosplitters/blob/master/Kula%20World/LiveSplit.KulaWorld.asl>Kula World</a> (PS1)
 - <a href=https://github.com/Jujstme/Autosplitters/blob/master/TimeSplitters%20-%20Future%20Perfect/LiveSplit.TimeSplittersFuturePerfect.asl>Timesplitters: Future Perfect</a> (PS2 and GameCube)
 
+Other scripts using emu-help that show how simple it is to set up:
+- <a href=https://github.com/SonicSpeedrunning/LiveSplit.SonicTripleTrouble/blob/main/LiveSplit.SonicTripleTrouble.asl>Sonic Triple Trouble</a> (Game Gear)
 
 ## Endianess
 
