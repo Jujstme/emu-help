@@ -4,15 +4,13 @@ using System.Linq;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
 
-public partial class PS1
+public partial class SNES
 {
     private Tuple<IntPtr, Func<bool>> EmuHawk()
     {
         var SupportedCores = new Dictionary<string, Tuple<int, int>>
         {
-            { "default", new Tuple<int, int>(0xD819000, 0x2FADC0) },
-            { "mednafen_psx_hw_libretro.dll", new Tuple<int, int>(0x200000, 0) },
-            { "pcsx_rearmed_libretro.dll", new Tuple<int, int>(0x210000, 0) },
+            { "default", new Tuple<int, int>(0x22000, 0x860) },
         };
 
         var WRAMbases = new Dictionary<string, IntPtr>();

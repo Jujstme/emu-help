@@ -44,6 +44,9 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Emulators\SNES\EmuHawk.cs" />
+    <Compile Include="Emulators\SNES\Snes9x.cs" />
+    <Compile Include="SNES.cs" />
     <Compile Include="Common\EmuBase.cs" />
     <Compile Include="Emulators\SMS\BlastEm.cs" />
     <Compile Include="Emulators\SMS\Retroarch.cs" />

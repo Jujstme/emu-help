@@ -35,7 +35,9 @@ public abstract class EmuBase
         Watchers.UpdateAll(game);
 
         if (Endianess == Endianess.BigEndian)
+        {
             LittleEndianWatchers.UpdateAll();
+        }
 
         return true;
     }

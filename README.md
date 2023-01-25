@@ -67,7 +67,7 @@ startup
     vars.Helper.Load = (Func<IntPtr, MemoryWatcherList>)(wram => new MemoryWatcherList
     {
         new MemoryWatcher<byte>(wram + 0x12AA) { Name = "Lives" },
-        new StringWatcher(wram + 0x2AA10) { Name = "Level" },
+        new StringWatcher(wram + 0x2AA10, 25) { Name = "Level" },
     });
 }
 ```

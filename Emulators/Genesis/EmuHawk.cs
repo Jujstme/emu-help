@@ -57,6 +57,7 @@ public partial class Genesis
 
             default:
                 WRAMbase = game.MemoryPages(true).First(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x30A4000).BaseAddress + 0x2A8780;
+                Endianess = Endianess.LittleEndian;
                 checkIfAlive = () => game.ReadBytes(WRAMbase, 1, out _);
                 break;
         }

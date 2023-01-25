@@ -100,7 +100,7 @@ namespace LiveSplit.EMUHELP
     /// </summary>
     public static class ToLittleEndian
     {
-        public static short SwapEndianess(this short value) => BitConverter.ToInt16(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
+        public static short SwapEndianess(this short value) => BitConverter.ToInt16(BitConverter.GetBytes((short)value).Reverse().ToArray(), 0);
         public static ushort SwapEndianess(this ushort value) => BitConverter.ToUInt16(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
         public static int SwapEndianess(this int value) => BitConverter.ToInt32(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
         public static uint SwapEndianess(this uint value) => BitConverter.ToUInt32(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
@@ -125,51 +125,21 @@ namespace LiveSplit.EMUHELP
             {
                 switch (entry)
                 {
-                    case MemoryWatcher<byte>:
-                        list.Add(new FakeMemoryWatcher<byte>(() => (byte)entry.Current) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<sbyte>:
-                        list.Add(new FakeMemoryWatcher<sbyte>(() => (sbyte)entry.Current) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<bool>:
-                        list.Add(new FakeMemoryWatcher<bool>(() => (bool)entry.Current) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<short>:
-                        list.Add(new FakeMemoryWatcher<short>(() => ((short)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<ushort>:
-                        list.Add(new FakeMemoryWatcher<ushort>(() => ((ushort)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<int>:
-                        list.Add(new FakeMemoryWatcher<int>(() => ((int)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<uint>:
-                        list.Add(new FakeMemoryWatcher<uint>(() => ((uint)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<long>:
-                        list.Add(new FakeMemoryWatcher<long>(() => ((long)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<ulong>:
-                        list.Add(new FakeMemoryWatcher<ulong>(() => ((ulong)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<IntPtr>:
-                        list.Add(new FakeMemoryWatcher<IntPtr>(() => ((IntPtr)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<UIntPtr>:
-                        list.Add(new FakeMemoryWatcher<UIntPtr>(() => ((UIntPtr)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<float>:
-                        list.Add(new FakeMemoryWatcher<float>(() => ((float)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<double>:
-                        list.Add(new FakeMemoryWatcher<double>(() => ((double)entry.Current).SwapEndianess()) { Name = entry.Name });
-                        break;
-                    case MemoryWatcher<char>:
-                        list.Add(new FakeMemoryWatcher<char>(() => (char)entry.Current) { Name = entry.Name });
-                        break;
-                    case StringWatcher:
-                        list.Add(new FakeMemoryWatcher<string>(() => (string)entry.Current) { Name = entry.Name });
-                        break;
+                    case MemoryWatcher<byte>: list.Add(new FakeMemoryWatcher<byte>(() => entry.Current == null ? default : (byte)entry.Current) { Name = entry.Name }); break;
+                    case MemoryWatcher<sbyte>: list.Add(new FakeMemoryWatcher<sbyte>(() => entry.Current == null ? default : (sbyte)entry.Current) { Name = entry.Name }); break;
+                    case MemoryWatcher<bool>: list.Add(new FakeMemoryWatcher<bool>(() => entry.Current == null ? default : (bool)entry.Current) { Name = entry.Name }); break;
+                    case MemoryWatcher<short>: list.Add(new FakeMemoryWatcher<short>(() => entry.Current == null ? default : ((short)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<ushort>: list.Add(new FakeMemoryWatcher<ushort>(() => entry.Current == null ? default : ((ushort)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<int>: list.Add(new FakeMemoryWatcher<int>(() => entry.Current == null ? default : ((int)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<uint>: list.Add(new FakeMemoryWatcher<uint>(() => entry.Current == null ? default : ((uint)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<long>: list.Add(new FakeMemoryWatcher<long>(() => entry.Current == null ? default : ((long)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<ulong>: list.Add(new FakeMemoryWatcher<ulong>(() => entry.Current == null ? default : ((ulong)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<IntPtr>:list.Add(new FakeMemoryWatcher<IntPtr>(() => entry.Current == null ? default : ((IntPtr)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<UIntPtr>: list.Add(new FakeMemoryWatcher<UIntPtr>(() => entry.Current == null ? default : ((UIntPtr)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<float>: list.Add(new FakeMemoryWatcher<float>(() => entry.Current == null ? default : ((float)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<double>: list.Add(new FakeMemoryWatcher<double>(() => entry.Current == null ? default : ((double)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<char>: list.Add(new FakeMemoryWatcher<char>(() => entry.Current == null ? default : (char)entry.Current) { Name = entry.Name }); break;
+                    case StringWatcher: list.Add(new FakeMemoryWatcher<string>(() => entry.Current == null ? default : (string)entry.Current) { Name = entry.Name }); break;
                 }
             }
 
@@ -192,11 +162,33 @@ namespace LiveSplit.EMUHELP
             field.SetValue(obj, value);
         }
 
+        public static T GetField<T>(this object obj, string name)
+        {
+            // Set the flags so that private and public fields from instances will be found
+            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            var field = obj.GetType().GetField(name, bindingFlags);
+            return (T)field?.GetValue(obj);
+        }
+
+        public static void SetField<T>(this object obj, string name, T value)
+        {
+            // Set the flags so that private and public fields from instances will be found
+            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            var field = obj.GetType().GetField(name, bindingFlags);
+            field.SetValue(obj, value);
+        }
+
         public static void ResetModulesWow64Cache(this Process process)
         {
             process.Refresh();
             var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
             typeof(ExtensionMethods).GetField("ModuleCache", bindingFlags).SetValue(null, new Dictionary<int, ProcessModuleWow64Safe[]>());
+
+            /*
+            var extension = typeof(ExtensionMethods).GetField("ModuleCache", bindingFlags);
+            var method = extension.GetType().GetMethod("Clear");
+            method.Invoke(extension, null);
+            */
         }
     }
 

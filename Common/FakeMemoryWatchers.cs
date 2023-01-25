@@ -8,6 +8,9 @@ namespace LiveSplit.EMUHELP
     {
         public void UpdateAll()
         {
+            if (this.Count == 0)
+                return;
+
             foreach (var watcher in this)
                 watcher.Update();
         }

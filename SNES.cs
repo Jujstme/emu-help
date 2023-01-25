@@ -1,21 +1,16 @@
 ﻿using System;
 using LiveSplit.EMUHELP;
 
-public class MasterSystem : SMS { }
-public class SegaMasterSystem : Genesis { }
-public class GameGear : SMS { }
-public class SegaGameGear : SMS { }
-
-public partial class SMS : EmuBase
+public partial class SNES : EmuBase
 {
-    public SMS()
+    public SNES()
     {
         EmulatorNames = new string[]
         {
-            "retroarch",
-            "blastem",
-            "Fusion",
+            //"retroarch",
             "EmuHawk",
+            "snes9x-x64",
+            "snes9x",
         };
 
         GameProcess = new ProcessHook(EmulatorNames);
@@ -25,13 +20,12 @@ public partial class SMS : EmuBase
     {
         var Init = game.ProcessName.ToLower() switch
         {
-            "retroarch" => Retroarch(),
-            "blastem" => BlastEm(),
-            "fusion" => Fusion(),
+            //"retroarch" => Retroarch(),
             "emuhawk" => EmuHawk(),
+            "snes9x-x64" or "snes9x" => Snes9x(),
             _ => throw new NotImplementedException()
         };
-        
+
         KeepAlive = Init.Item2;
         Watchers = Load(Init.Item1);
     }
