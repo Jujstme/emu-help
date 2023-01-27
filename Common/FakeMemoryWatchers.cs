@@ -20,7 +20,7 @@ namespace LiveSplit.EMUHELP
 
     public abstract class FakeMemoryWatcher
     {
-        protected readonly object _func;
+        protected object _func;
         public string Name { get; set; }
         public object Current { get; protected set; }
         public object Old { get; protected set; }
@@ -30,9 +30,8 @@ namespace LiveSplit.EMUHELP
 
     public class FakeMemoryWatcher<T> : FakeMemoryWatcher
     {
-        protected readonly new Func<T> _func = null;
-        public new T Current { get; protected set; } = default;
-        public new T Old { get; protected set; } = default;
+        public new T Current { get => (T)base.Current ?? default; protected set => base.Current = value; }
+        public new T Old { get => (T)base.Old ?? default; protected set => base.Old = value; }
 
         /// <summary>
         /// Create a new FakeMemoryWatcher object with default values for both .Old and .Current
@@ -45,7 +44,7 @@ namespace LiveSplit.EMUHELP
         /// </summary>
         public FakeMemoryWatcher(Func<T> Func)
         {
-            this._func = Func;
+            base._func = Func;
         }
 
         /// <summary>
@@ -53,10 +52,10 @@ namespace LiveSplit.EMUHELP
         /// </summary>
         public override void Update()
         {
-            Old = Current;
+            base.Old = base.Current;
 
-            if (_func != null)
-                Current = _func.Invoke();
+            if (base._func != null)
+                base.Current = ((Func<T>)base._func).Invoke();
 
             Changed = !Old.Equals(Current);
         }
@@ -66,8 +65,8 @@ namespace LiveSplit.EMUHELP
         /// </summary>
         public void Update(T newValue)
         {
-            Old = Current;
-            Current = newValue;
+            base.Old = base.Current;
+            base.Current = newValue;
 
             Changed = !Old.Equals(Current);
         }
