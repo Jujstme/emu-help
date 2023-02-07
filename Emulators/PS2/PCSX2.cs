@@ -7,14 +7,15 @@ public partial class PS2
     private Tuple<IntPtr, Func<bool>> PCSX2()
     {
         var scanner = new SignatureScanner(game, game.MainModuleWow64Safe().BaseAddress, game.MainModuleWow64Safe().ModuleMemorySize);
-        IntPtr WRAMbase = WRAMbase = game.Is64Bit()
-            ? scanner.ScanOrThrow(new SigScanTarget(4, "48 8B 8C C2 ???????? 48 85 C9") { OnFound = (p, s, addr) => game.MainModuleWow64Safe().BaseAddress + p.ReadValue<int>(addr) + 0x5E3 * 8 })
-            : scanner.ScanOrThrow(new SigScanTarget(3, "8B 04 85 ???????? 85 C0 78 10") { OnFound = (p, s, addr) => p.ReadPointer(addr) + 0x5E3 * 4 });
+        IntPtr Base = game.Is64Bit()
+            ? scanner.ScanOrThrow(new SigScanTarget(4, "48 8B 8C C2 ???????? 48 85 C9") { OnFound = (p, s, addr) => game.MainModuleWow64Safe().BaseAddress + p.ReadValue<int>(addr) + 0x24B * 8 })
+            : scanner.ScanOrThrow(new SigScanTarget(3, "8B 04 85 ???????? 85 C0 78 10") { OnFound = (p, s, addr) => p.ReadPointer(addr) + 0x24B * 4 });
 
-        bool keepAlive() => !game.ReadPointer(WRAMbase).IsZero();
-
-        WRAMbase = game.ReadPointer(WRAMbase);
+        Base.ThrowIfZero();
+        IntPtr WRAMbase = game.ReadPointer(Base);
         WRAMbase.ThrowIfZero();
+
+        bool keepAlive() => game.ReadPointer(Base) == WRAMbase;
 
         Debugs.Info("  => Hooked to emulator: PCSX2");
         Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");

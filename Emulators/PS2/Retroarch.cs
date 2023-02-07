@@ -10,7 +10,7 @@ public partial class PS2
     {
         var SupportedCores = new Dictionary<string, int>
         {
-            { "pcsx2_libretro.dll", 0x17000 }, 
+            { "pcsx2_libretro.dll", 0x2639000 }, 
         };
 
         game.ResetModulesWow64Cache();
