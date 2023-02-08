@@ -134,12 +134,12 @@ namespace LiveSplit.EMUHELP
                     case MemoryWatcher<uint>: list.Add(new FakeMemoryWatcher<uint>(() => entry.Current == null ? default : ((uint)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
                     case MemoryWatcher<long>: list.Add(new FakeMemoryWatcher<long>(() => entry.Current == null ? default : ((long)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
                     case MemoryWatcher<ulong>: list.Add(new FakeMemoryWatcher<ulong>(() => entry.Current == null ? default : ((ulong)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case MemoryWatcher<IntPtr>:list.Add(new FakeMemoryWatcher<IntPtr>(() => entry.Current == null ? default : ((IntPtr)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case MemoryWatcher<UIntPtr>: list.Add(new FakeMemoryWatcher<UIntPtr>(() => entry.Current == null ? default : ((UIntPtr)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<IntPtr>:list.Add(new FakeMemoryWatcher<IntPtr>(() => entry.Current == null ? IntPtr.Zero : ((IntPtr)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
+                    case MemoryWatcher<UIntPtr>: list.Add(new FakeMemoryWatcher<UIntPtr>(() => entry.Current == null ? UIntPtr.Zero : ((UIntPtr)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
                     case MemoryWatcher<float>: list.Add(new FakeMemoryWatcher<float>(() => entry.Current == null ? default : ((float)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
                     case MemoryWatcher<double>: list.Add(new FakeMemoryWatcher<double>(() => entry.Current == null ? default : ((double)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
                     case MemoryWatcher<char>: list.Add(new FakeMemoryWatcher<char>(() => entry.Current == null ? default : (char)entry.Current) { Name = entry.Name }); break;
-                    case StringWatcher: list.Add(new FakeMemoryWatcher<string>(() => entry.Current == null ? default : (string)entry.Current) { Name = entry.Name }); break;
+                    case StringWatcher: list.Add(new FakeMemoryWatcher<string>(() => entry.Current == null ? string.Empty : (string)entry.Current) { Name = entry.Name }); break;
                 }
             }
 

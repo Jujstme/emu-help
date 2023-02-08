@@ -8,9 +8,6 @@ namespace LiveSplit.EMUHELP
     {
         public void UpdateAll()
         {
-            if (this.Count == 0)
-                return;
-
             foreach (var watcher in this)
                 watcher.Update();
         }
@@ -24,7 +21,7 @@ namespace LiveSplit.EMUHELP
         public string Name { get; set; }
         public object Current { get; protected set; }
         public object Old { get; protected set; }
-        public bool Changed { get; protected set; }
+        public bool Changed { get; protected set; } = default;
         public abstract void Update();
     }
 
@@ -57,7 +54,7 @@ namespace LiveSplit.EMUHELP
             if (base._func != null)
                 base.Current = ((Func<T>)base._func).Invoke();
 
-            Changed = !Old.Equals(Current);
+            Changed = base.Old == null ? false : !Old.Equals(Current);
         }
 
         /// <summary>
@@ -68,7 +65,7 @@ namespace LiveSplit.EMUHELP
             base.Old = base.Current;
             base.Current = newValue;
 
-            Changed = !Old.Equals(Current);
+            Changed = base.Old == null ? false : !Old.Equals(Current);
         }
     }
 }
