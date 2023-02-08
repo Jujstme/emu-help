@@ -38,10 +38,17 @@ public partial class Wii : EmuBase
             return false;
         }
 
-        Watchers.UpdateAll();
+        try
+        {
+            Watchers.UpdateAll();
 
-        if (Endianess == Endianess.BigEndian)
-            LittleEndianWatchers.UpdateAll();
+            if (Endianess == Endianess.BigEndian)
+                LittleEndianWatchers.UpdateAll();
+        }
+        catch
+        {
+            return false;
+        }
 
         return true;
     }
@@ -61,19 +68,18 @@ public partial class Wii : EmuBase
         var tempWatchers = Load(MEM1, MEM2);
 
         Watchers = new();
-        WiiDeepPointer wdpr;
         
         // For each watcher this checks whether it's using DeepPointer.
         // If it is, it converts the DeepPointer to a new EmuDeepPointer
         foreach (var watcher in tempWatchers)
         {
             var addrType = watcher.GetProperty<int>("AddrType");
-            
+
             // If addrType != 0, then it's a standard MemoryWatcher
             if (addrType != 0)
             {
                 var address = watcher.GetProperty<IntPtr>("Address");
-                wdpr = new WiiDeepPointer(MEM1, MEM2, address);
+                WiiDeepPointer wdpr = new WiiDeepPointer(MEM1, MEM2, address);
                 switch (watcher)
                 {
                     case MemoryWatcher<byte>: Watchers.Add(new FakeMemoryWatcher<byte>(() => wdpr.Deref<byte>(game)) { Name = watcher.Name }); break;
@@ -88,34 +94,35 @@ public partial class Wii : EmuBase
                     case MemoryWatcher<float>: Watchers.Add(new FakeMemoryWatcher<float>(() => wdpr.Deref<float>(game)) { Name = watcher.Name }); break;
                     case MemoryWatcher<double>: Watchers.Add(new FakeMemoryWatcher<double>(() => wdpr.Deref<double>(game)) { Name = watcher.Name }); break;
                     case MemoryWatcher<char>: Watchers.Add(new FakeMemoryWatcher<char>(() => wdpr.Deref<char>(game)) { Name = watcher.Name }); break;
-                    case StringWatcher: var numBytes = watcher.GetField<int>("_numBytes"); Watchers.Add(new FakeMemoryWatcher<string>(() => wdpr.DerefString(game, numBytes)) { Name = watcher.Name }); break;
+                    case StringWatcher: int numBytes = watcher.GetField<int>("_numBytes"); Watchers.Add(new FakeMemoryWatcher<string>(() => wdpr.DerefString(game, numBytes)) { Name = watcher.Name }); break;
                     default: throw new NotImplementedException();
                 }
-                continue;
             }
-
-            // In case of DeepPointer, we need to take out the baseaddress and the offsets
-            DeepPointer dpr = watcher.GetProperty<DeepPointer>("DeepPtr");
-            IntPtr absBase = dpr.GetField<IntPtr>("_absoluteBase");
-            int[] offsets = dpr.GetField<List<int>>("_offsets").Skip(1).ToArray();
-
-            wdpr = new WiiDeepPointer(MEM1, MEM2, absBase, offsets);
-            switch (watcher)
+            else
             {
-                case MemoryWatcher<byte>:  Watchers.Add(new FakeMemoryWatcher<byte>(() => wdpr.Deref<byte>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<sbyte>: Watchers.Add(new FakeMemoryWatcher<sbyte>(() => wdpr.Deref<sbyte>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<bool>: Watchers.Add(new FakeMemoryWatcher<bool>(() => wdpr.Deref<bool>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<short>: Watchers.Add(new FakeMemoryWatcher<short>(() => wdpr.Deref<short>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<ushort>: Watchers.Add(new FakeMemoryWatcher<ushort>(() => wdpr.Deref<ushort>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<int>: Watchers.Add(new FakeMemoryWatcher<int>(() => wdpr.Deref<int>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<uint>: Watchers.Add(new FakeMemoryWatcher<uint>(() => wdpr.Deref<uint>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<long>: Watchers.Add(new FakeMemoryWatcher<long>(() => wdpr.Deref<long>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<ulong>: Watchers.Add(new FakeMemoryWatcher<ulong>(() => wdpr.Deref<ulong>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<float>: Watchers.Add(new FakeMemoryWatcher<float>(() => wdpr.Deref<float>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<double>: Watchers.Add(new FakeMemoryWatcher<double>(() => wdpr.Deref<double>(game)) { Name = watcher.Name }); break;
-                case MemoryWatcher<char>: Watchers.Add(new FakeMemoryWatcher<char>(() => wdpr.Deref<char>(game)) { Name = watcher.Name }); break;
-                case StringWatcher: var numBytes = watcher.GetField<int>("_numBytes"); Watchers.Add(new FakeMemoryWatcher<string>(() => wdpr.DerefString(game, numBytes)) { Name = watcher.Name }); break;
-                default: throw new NotImplementedException();
+                // In case of DeepPointer, we need to take out the baseaddress and the offsets
+                DeepPointer dpr = watcher.GetProperty<DeepPointer>("DeepPtr");
+                IntPtr absBase = dpr.GetField<IntPtr>("_absoluteBase");
+                int[] offsets = dpr.GetField<List<int>>("_offsets").Skip(1).ToArray();
+
+                WiiDeepPointer wdpr = new WiiDeepPointer(MEM1, MEM2, absBase, offsets);
+                switch (watcher)
+                {
+                    case MemoryWatcher<byte>: Watchers.Add(new FakeMemoryWatcher<byte>(() => wdpr.Deref<byte>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<sbyte>: Watchers.Add(new FakeMemoryWatcher<sbyte>(() => wdpr.Deref<sbyte>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<bool>: Watchers.Add(new FakeMemoryWatcher<bool>(() => wdpr.Deref<bool>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<short>: Watchers.Add(new FakeMemoryWatcher<short>(() => wdpr.Deref<short>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<ushort>: Watchers.Add(new FakeMemoryWatcher<ushort>(() => wdpr.Deref<ushort>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<int>: Watchers.Add(new FakeMemoryWatcher<int>(() => wdpr.Deref<int>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<uint>: Watchers.Add(new FakeMemoryWatcher<uint>(() => wdpr.Deref<uint>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<long>: Watchers.Add(new FakeMemoryWatcher<long>(() => wdpr.Deref<long>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<ulong>: Watchers.Add(new FakeMemoryWatcher<ulong>(() => wdpr.Deref<ulong>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<float>: Watchers.Add(new FakeMemoryWatcher<float>(() => wdpr.Deref<float>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<double>: Watchers.Add(new FakeMemoryWatcher<double>(() => wdpr.Deref<double>(game)) { Name = watcher.Name }); break;
+                    case MemoryWatcher<char>: Watchers.Add(new FakeMemoryWatcher<char>(() => wdpr.Deref<char>(game)) { Name = watcher.Name }); break;
+                    case StringWatcher: int numBytes = watcher.GetField<int>("_numBytes"); Watchers.Add(new FakeMemoryWatcher<string>(() => wdpr.DerefString(game, numBytes)) { Name = watcher.Name }); break;
+                    default: throw new NotImplementedException();
+                }
             }
         }
 
