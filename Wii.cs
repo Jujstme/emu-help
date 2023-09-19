@@ -1,220 +1,111 @@
 ﻿using System;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
-using System.Linq;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Net;
+using LiveSplit.EMUHELP.WII;
 
-public class WII : Wii { }
+public class Wii : WII { }
 
-public partial class Wii : EmuBase
+public partial class WII : HelperBase
 {
-    public new Func<IntPtr, IntPtr, MemoryWatcherList> Load { get; set; }
-    public string[] Gamecodes { get; set; }
-    private IntPtr MEM1 { get; set; }
-    private IntPtr MEM2 { get; set; }
-    public new FakeMemoryWatcherList Watchers { get; protected set; } = new();
-    public new FakeMemoryWatcher this[string index] => Endianess == Endianess.BigEndian ? LittleEndianWatchers[index] : this.Watchers[index];
+    private WIIBase emu;
+    private IntPtr MEM1 => emu.MEM1;
+    private IntPtr MEM2 => emu.MEM2;
+    private Endianness.Endian Endian => emu.Endian;
 
-    public Wii()
+
+    public WII(bool generateCode) : base(generateCode)
     {
-        EmulatorNames = new string[]
+        var ProcessNames = new string[]
         {
             "Dolphin",
+            "retroarch",
         };
 
-        GameProcess = new ProcessHook(EmulatorNames);
+        GameProcess = new ProcessHook(ProcessNames);
+        Debugs.Info("  => WII Helper started");
     }
 
-    public new bool Update()
-    {
-        if (Load == null || !base.Init())
-            return false;
-
-        if (!KeepAlive())
-        {
-            GameProcess.InitStatus = GameInitStatus.NotStarted;
-            return false;
-        }
-
-        Watchers.UpdateAll();
-
-        if (Endianess == Endianess.BigEndian)
-            LittleEndianWatchers.UpdateAll();
-
-        return true;
-    }
+    public WII()
+        : this(true) { }
 
     protected override void InitActions()
     {
-        var Init = game.ProcessName.ToLower() switch
+        emu = game.ProcessName switch
         {
-            "dolphin" => Dolphin(),
+            "Dolphin" => new Dolphin(this),
+            "retroarch" => new Retroarch(this),
             _ => throw new NotImplementedException(),
         };
 
-        MEM1 = Init.Item1;
-        MEM2 = Init.Item2;
-        KeepAlive = Init.Item3;
-
-        var tempWatchers = Load(MEM1, MEM2);
+        KeepAlive = emu.KeepAlive;
 
         Watchers = new();
-        
-        // For each watcher this checks whether it's using DeepPointer.
-        // If it is, it converts the DeepPointer to a new EmuDeepPointer
-        foreach (var watcher in tempWatchers)
+        foreach (var watcher in _load)
         {
-            var addrType = watcher.GetProperty<int>("AddrType");
-
-            // If addrType != 0, then it's a standard MemoryWatcher
-            if (addrType != 0)
+            FakeMemoryWatcher newWatcher = watcher.Value.Item1 switch
             {
-                var address = watcher.GetProperty<IntPtr>("Address");
-                WiiDeepPointer wdpr = new WiiDeepPointer(MEM1, MEM2, address);
-                this.AddFakeWatcher(Watchers, watcher, new WiiDeepPointer(MEM1, MEM2, address));
-            }
-            else
-            {
-                // In case of DeepPointer, we need to take out the baseaddress and the offsets
-                DeepPointer dpr = watcher.GetProperty<DeepPointer>("DeepPtr");
-                IntPtr absBase = dpr.GetField<IntPtr>("_absoluteBase");
-                int[] offsets = dpr.GetField<List<int>>("_offsets").Skip(1).ToArray();
-                this.AddFakeWatcher(Watchers, watcher, new WiiDeepPointer(MEM1, MEM2, absBase, offsets));
-            }
-        }
-
-        if (Endianess == Endianess.BigEndian)
-        {
-            LittleEndianWatchers = new();
-
-            foreach (var entry in Watchers)
-            {
-                switch (entry)
-                {
-                    case FakeMemoryWatcher<byte>: LittleEndianWatchers.Add(new FakeMemoryWatcher<byte>(() => (byte)entry.Current) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<sbyte>: LittleEndianWatchers.Add(new FakeMemoryWatcher<sbyte>(() => (sbyte)entry.Current) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<bool>: LittleEndianWatchers.Add(new FakeMemoryWatcher<bool>(() => (bool)entry.Current) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<short>: LittleEndianWatchers.Add(new FakeMemoryWatcher<short>(() => ((short)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<ushort>: LittleEndianWatchers.Add(new FakeMemoryWatcher<ushort>(() => ((ushort)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<int>: LittleEndianWatchers.Add(new FakeMemoryWatcher<int>(() => ((int)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<uint>: LittleEndianWatchers.Add(new FakeMemoryWatcher<uint>(() => ((uint)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<long>: LittleEndianWatchers.Add(new FakeMemoryWatcher<long>(() => ((long)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<ulong>: LittleEndianWatchers.Add(new FakeMemoryWatcher<ulong>(() => ((ulong)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<float>: LittleEndianWatchers.Add(new FakeMemoryWatcher<float>(() => ((float)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<double>: LittleEndianWatchers.Add(new FakeMemoryWatcher<double>(() => ((double)entry.Current).SwapEndianess()) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<char>: LittleEndianWatchers.Add(new FakeMemoryWatcher<char>(() => (char)entry.Current) { Name = entry.Name }); break;
-                    case FakeMemoryWatcher<string>: LittleEndianWatchers.Add(new FakeMemoryWatcher<string>(() => (string)entry.Current) { Name = entry.Name }); break;
-                    default: throw new NotImplementedException();
-                }
-            }
+                TypeCode.Int32 => new FakeMemoryWatcher<int>(() => ReadValue<int>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Boolean => new FakeMemoryWatcher<bool>(() => ReadValue<bool>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Char => new FakeMemoryWatcher<char>(() => ReadValue<char>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.SByte => new FakeMemoryWatcher<sbyte>(() => ReadValue<sbyte>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Byte => new FakeMemoryWatcher<byte>(() => ReadValue<byte>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Int16 => new FakeMemoryWatcher<short>(() => ReadValue<short>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.UInt16 => new FakeMemoryWatcher<ushort>(() => ReadValue<ushort>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.UInt32 => new FakeMemoryWatcher<uint>(() => ReadValue<uint>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Int64 => new FakeMemoryWatcher<long>(() => ReadValue<long>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.UInt64 => new FakeMemoryWatcher<ulong>(() => ReadValue<ulong>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Single => new FakeMemoryWatcher<float>(() => ReadValue<float>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Double => new FakeMemoryWatcher<double>(() => ReadValue<double>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.Decimal => new FakeMemoryWatcher<decimal>(() => ReadValue<decimal>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.DateTime => new FakeMemoryWatcher<DateTime>(() => ReadValue<DateTime>(watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                TypeCode.String => new FakeMemoryWatcher<string>(() => ReadString(_stringLoad[watcher.Key], watcher.Value.Item2, watcher.Value.Item3)) { Name = watcher.Key },
+                _ => throw new NotImplementedException(),
+            };
+            Watchers.Add(newWatcher);
         }
     }
 
-    private void AddFakeWatcher(FakeMemoryWatcherList FakeWatcherList, MemoryWatcher watcher, WiiDeepPointer wdpr)
+    public T ReadValue<T>(uint offset, params uint[] offsets) where T : unmanaged
     {
-        switch (watcher)
-        {
-            case MemoryWatcher<byte>: FakeWatcherList.Add(new FakeMemoryWatcher<byte>(() => wdpr.Deref<byte>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<sbyte>: FakeWatcherList.Add(new FakeMemoryWatcher<sbyte>(() => wdpr.Deref<sbyte>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<bool>: FakeWatcherList.Add(new FakeMemoryWatcher<bool>(() => wdpr.Deref<bool>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<short>: FakeWatcherList.Add(new FakeMemoryWatcher<short>(() => wdpr.Deref<short>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<ushort>: FakeWatcherList.Add(new FakeMemoryWatcher<ushort>(() => wdpr.Deref<ushort>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<int>: FakeWatcherList.Add(new FakeMemoryWatcher<int>(() => wdpr.Deref<int>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<uint>: FakeWatcherList.Add(new FakeMemoryWatcher<uint>(() => wdpr.Deref<uint>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<long>: FakeWatcherList.Add(new FakeMemoryWatcher<long>(() => wdpr.Deref<long>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<ulong>: FakeWatcherList.Add(new FakeMemoryWatcher<ulong>(() => wdpr.Deref<ulong>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<float>: FakeWatcherList.Add(new FakeMemoryWatcher<float>(() => wdpr.Deref<float>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<double>: FakeWatcherList.Add(new FakeMemoryWatcher<double>(() => wdpr.Deref<double>(game)) { Name = watcher.Name }); break;
-            case MemoryWatcher<char>: FakeWatcherList.Add(new FakeMemoryWatcher<char>(() => wdpr.Deref<char>(game)) { Name = watcher.Name }); break;
-            case StringWatcher: int numBytes = watcher.GetField<int>("_numBytes"); FakeWatcherList.Add(new FakeMemoryWatcher<string>(() => wdpr.DerefString(game, numBytes, default_: string.Empty)) { Name = watcher.Name }); break;
-            default: throw new NotImplementedException();
-        }
+        return ReadValueIgnoringEndianness<T>(offsets.Length == 0 ? offset : DerefOffsets(offset, offsets)).FromEndian(Endian);
     }
 
-
-    public class WiiDeepPointer
+    private T ReadValueIgnoringEndianness<T>(uint offset) where T : unmanaged
     {
-        private readonly IntPtr MEM1;
-        private readonly IntPtr MEM2;
-        private readonly IntPtr _absoluteBase;
-        private List<int> _offsets;
+        if (MEM1 == null || MEM2 == null)
+            return default;
 
-        public WiiDeepPointer(IntPtr MEM1, IntPtr MEM2, IntPtr absoluteBase, params int[] offsets)
-        {
-            this.MEM1 = MEM1;
-            this.MEM2 = MEM2;
-            _absoluteBase = absoluteBase;
-            InitializeOffsets(offsets);
-        }
+        if (offset >= 0x80000000 && offset <= 0x817FFFFF)
+            return game.ReadValue<T>((IntPtr)((long)MEM1 + offset - 0x80000000));
+        else if (offset >= 0x90000000 && offset <= 0x93FFFFFF)
+            return game.ReadValue<T>((IntPtr)((long)MEM2 + offset - 0x90000000));
+        else
+            return default;
+    }
 
-        public bool DerefOffsets(Process process, out IntPtr ptr)
-        {
-            ptr = _absoluteBase;
-            for (int i = 0; i < _offsets.Count - 1; i++)
-            {
-                if (!process.ReadValue<uint>(ptr + _offsets[i], out var tempPtr) || tempPtr == 0)
-                    return false;
-                tempPtr = tempPtr.SwapEndianess();
-                ptr = tempPtr < 0x90000000 ? (IntPtr)((long)MEM1 + tempPtr - 0x80000000) : (IntPtr)((long)MEM2 + tempPtr - 0x90000000);
-            }
+    public string ReadString(int length, uint offset, params uint[] offsets)
+    {
+        return ReadRawString(length, offsets.Length == 0 ? offset : DerefOffsets(offset, offsets));
+    }
 
-            ptr += _offsets[_offsets.Count - 1];
-            return true;
-        }
+    private string ReadRawString(int length, uint offset)
+    {
+        if (MEM1 == null || MEM2 == null)
+            return default;
 
-        private void InitializeOffsets(params int[] offsets)
-        {
-            _offsets = new List<int>{ 0 };
-            _offsets.AddRange(offsets);
-        }
+        if (offset >= 0x80000000 && offset <= 0x817FFFFF)
+            return game.ReadString((IntPtr)((long)MEM1 + offset - 0x80000000), length);
+        if (offset >= 0x90000000 || offset <= 0x93FFFFFF)
+            return game.ReadString((IntPtr)((long)MEM2 + offset - 0x90000000), length);
+        else
+            return default;
+    }
 
-
-        public bool Deref<T>(Process process, out T value) where T : struct
-        {
-            if (!DerefOffsets(process, out IntPtr ptr) || !process.ReadValue(ptr, out value))
-            {
-                value = default;
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool DerefBytes(Process process, int count, out byte[] value)
-        {
-            if (!DerefOffsets(process, out var ptr) || !process.ReadBytes(ptr, count, out value))
-            {
-                value = null;
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool DerefString(Process process, ReadStringType type, int numBytes, out string str)
-        {
-            StringBuilder stringBuilder = new(numBytes);
-            if (!DerefString(process, type, stringBuilder))
-            {
-                str = null;
-                return false;
-            }
-
-            str = stringBuilder.ToString();
-            return true;
-        }
-
-        public T Deref<T>(Process process, T default_ = default) where T : struct => !Deref(process, out T value) ? default_ : value;
-        public byte[] DerefBytes(Process process, int count) => !DerefBytes(process, count, out var value) ? null : value;
-        public bool DerefString(Process process, StringBuilder sb) => DerefString(process, ReadStringType.AutoDetect, sb);
-        public bool DerefString(Process process, ReadStringType type, StringBuilder sb) => DerefOffsets(process, out var ptr) && process.ReadString(ptr, type, sb);
-        public string DerefString(Process process, int numBytes, string default_ = null) => !DerefString(process, ReadStringType.AutoDetect, numBytes, out var str) ? default_ : str;
-        public string DerefString(Process process, ReadStringType type, int numBytes, string default_ = null) => !DerefString(process, type, numBytes, out var str) ? default_ : str;
-        public bool DerefString(Process process, int numBytes, out string str) => DerefString(process, ReadStringType.AutoDetect, numBytes, out str);
+    private uint DerefOffsets(uint offset, uint[] offsets)
+    {
+        uint actualOffset = ReadValue<uint>(offset);
+        for (int i = 0; i < offsets.Length - 1; i++)
+            actualOffset = ReadValue<uint>(actualOffset + offsets[i]);
+        return actualOffset + offsets[offsets.Length - 1];
     }
 }
-
-

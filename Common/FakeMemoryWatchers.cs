@@ -19,8 +19,8 @@ namespace LiveSplit.EMUHELP
     {
         protected object _func;
         public string Name { get; set; }
-        public object Current { get; protected set; }
-        public object Old { get; protected set; }
+        public object Current { get; protected set; } = default;
+        public object Old { get; protected set; } = default;
         public bool Changed { get; protected set; } = default;
         public abstract void Update();
     }
@@ -54,7 +54,7 @@ namespace LiveSplit.EMUHELP
             if (base._func != null)
                 base.Current = ((Func<T>)base._func).Invoke();
 
-            Changed = base.Old == null ? false : !Old.Equals(Current);
+            Changed = base.Old != null && !Old.Equals(Current);
         }
 
         /// <summary>

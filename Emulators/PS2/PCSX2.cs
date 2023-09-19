@@ -1,25 +1,54 @@
-﻿using System;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
+﻿using LiveSplit.ComponentUtil;
+using System;
 
-public partial class PS2
+namespace LiveSplit.EMUHELP.PS2
 {
-    private Tuple<IntPtr, Func<bool>> PCSX2()
+    internal class PCSX2 : PS2Base
     {
-        var scanner = new SignatureScanner(game, game.MainModuleWow64Safe().BaseAddress, game.MainModuleWow64Safe().ModuleMemorySize);
-        IntPtr Base = game.Is64Bit()
-            ? scanner.ScanOrThrow(new SigScanTarget(4, "48 8B 8C C2 ???????? 48 85 C9") { OnFound = (p, s, addr) => game.MainModuleWow64Safe().BaseAddress + p.ReadValue<int>(addr) + 0x24B * 8 })
-            : scanner.ScanOrThrow(new SigScanTarget(3, "8B 04 85 ???????? 85 C0 78 10") { OnFound = (p, s, addr) => p.ReadPointer(addr) + 0x24B * 4 });
+        private readonly bool is64Bit;
+        private readonly IntPtr addr_base;
 
-        Base.ThrowIfZero();
-        IntPtr WRAMbase = game.ReadPointer(Base);
-        WRAMbase.ThrowIfZero();
+        public PCSX2(HelperBase helper) : base(helper)
+        {
+            is64Bit = Helper.game.Is64Bit();
 
-        bool keepAlive() => game.ReadPointer(Base) == WRAMbase;
+            if (is64Bit)
+            {
+                addr_base = Helper.game.SafeSigScanOrThrow(new SigScanTarget(3, "48 8B ?? ?? ?? ?? ?? 25 F0 3F 00 00") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) });
+            }
+            else
+            {
+                SigScanTarget[] targets =
+                {
+                    new SigScanTarget(2, "8B ?? ?? ?? ?? ?? 25 F0 3F 00 00") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                    new SigScanTarget(2, "8B ?? ?? ?? ?? ?? 81 ?? F0 3F 00 00") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                };
 
-        Debugs.Info("  => Hooked to emulator: PCSX2");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
+                foreach (var entry in targets)
+                {
+                    addr_base = Helper.game.SafeSigScan(entry);
+                    if (!addr_base.IsZero())
+                        break;
+                }
 
-        return Tuple.Create(WRAMbase, keepAlive);
+                addr_base.ThrowIfZero();
+            }
+
+            ram_base = Helper.game.ReadPointer(addr_base);
+
+            Debugs.Info("  => Hooked to emulator: PCSX2");
+            Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
+        }
+
+        public override bool KeepAlive()
+        {
+            if (Helper.game.ReadPointer(addr_base, is64Bit, out var ptr))
+            {
+                ram_base = ptr;
+                return true;
+            }
+            else
+                return false;
+        }
     }
 }

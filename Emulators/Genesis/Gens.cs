@@ -1,24 +1,27 @@
-﻿using System;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
+﻿using LiveSplit.ComponentUtil;
 
-public partial class Genesis
+namespace LiveSplit.EMUHELP.Genesis
 {
-    private Tuple<IntPtr, Func<bool>> Gens()
+    internal class Gens : GenesisBase
     {
-        Endianess = Endianess.LittleEndian;
+        public Gens(HelperBase helper) : base(helper)
+        {
+            var wr_base = Helper.game.SafeSigScanOrThrow(new SigScanTarget(11, "72 ?? 81 ?? FF FF 00 00 66 8B"));
 
-        var scanner = new SignatureScanner(game, game.MainModuleWow64Safe().BaseAddress, game.MainModuleWow64Safe().ModuleMemorySize);
-        IntPtr WRAMbase = scanner.ScanOrThrow(new SigScanTarget(11, "72 ?? 81 ?? FF FF 00 00 66 8B ?? ????????"));
+            Endian = Helper.game.ReadValue<byte>(wr_base + 4) == 0x86
+                ? Endianness.Endian.Big
+                : Endianness.Endian.Little;
 
-        if (game.ReadValue<byte>(WRAMbase + 4) == 0x86)
-            Endianess = Endianess.BigEndian;
+            ram_base = Helper.game.ReadPointer(wr_base);
+            ram_base.ThrowIfZero();
 
-        WRAMbase = game.ReadPointer(WRAMbase);
+            Debugs.Info("  => Hooked to emulator: Fusion");
+            Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
+        }
 
-        Debugs.Info("  => Hooked to emulator: Gens");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
-
-        return Tuple.Create(WRAMbase, () => true);
+        public override bool KeepAlive()
+        {
+            return true;
+        }
     }
 }

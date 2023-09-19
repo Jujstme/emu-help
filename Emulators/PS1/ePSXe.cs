@@ -1,16 +1,20 @@
-﻿using System;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
+﻿using LiveSplit.ComponentUtil;
 
-public partial class PS1
+namespace LiveSplit.EMUHELP.PS1
 {
-    private Tuple<IntPtr, Func<bool>> ePSXe()
+    internal class ePSXe : PS1Base
     {
-        IntPtr WRAMbase = game.SigScanner().ScanOrThrow(new SigScanTarget(5, "C1 E1 10 8D 89") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+        public ePSXe(HelperBase helper) : base(helper)
+        {
+            ram_base = Helper.game.SafeSigScanOrThrow(new SigScanTarget(5, "C1 E1 10 8D 89") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
 
-        Debugs.Info("  => Hooked to emulator: ePSXe");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
+            Debugs.Info("  => Hooked to emulator: ePSXe");
+            Debugs.Info($"  => WRAM address found at 0x{ram_base.ToString("X")}");
+        }
 
-        return Tuple.Create(WRAMbase, () => true);
+        public override bool KeepAlive()
+        {
+            return true;
+        }
     }
 }

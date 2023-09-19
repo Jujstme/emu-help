@@ -1,67 +1,71 @@
 ﻿using System;
 using System.Linq;
 using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
 
-public partial class Genesis
+namespace LiveSplit.EMUHELP.Genesis
 {
-    private Tuple<IntPtr, Func<bool>> Retroarch()
+    internal class Retroarch : GenesisBase
     {
-        var supportedCores = new string[]
-        {
-            "blastem_libretro.dll",
-            "genesis_plus_gx_libretro.dll",
-            "genesis_plus_gx_wide_libretro.dll",
-            "picodrive_libretro.dll",
-        };
+        private readonly IntPtr core_base_address;
 
-        game.ResetModulesWow64Cache();
-        ProcessModuleWow64Safe CurrentCore = game.ModulesWow64Safe().First(m => supportedCores.Contains(m.ModuleName));
-      
-        IntPtr WRAMbase = IntPtr.Zero;
-        SignatureScanner scanner;
-
-        switch (CurrentCore.ModuleName.ToLower())
+        public Retroarch(HelperBase helper) : base(helper)
         {
-            case "blastem_libretro.dll":
-                foreach (var page in game.MemoryPages().Where(p => (int)p.RegionSize == 0x101000))
+            var game = Helper.game;
+
+            string[] supportedCores =
+            {
+                "blastem_libretro.dll",
+                "genesis_plus_gx_libretro.dll",
+                "genesis_plus_gx_wide_libretro.dll",
+                "picodrive_libretro.dll",
+            };
+
+            ProcessModuleWow64Safe currentCore = game.ModulesWow64Safe().First(m => supportedCores.Any(e => e == m.ModuleName));
+            core_base_address = currentCore.BaseAddress;
+
+            bool is64Bit = game.Is64Bit();
+            var scanner = new SignatureScanner(game, core_base_address, currentCore.ModuleMemorySize);
+
+            Endian = Endianness.Endian.Little;
+
+            if (currentCore.ModuleName == "blastem_libretro.dll")
+            {
+                foreach (var entry in Helper.game.MemoryPages(true).Where(p => (int)p.RegionSize == 0x10100 && (p.AllocationProtect & MemPageProtect.PAGE_READWRITE) != 0))
                 {
-                    WRAMbase = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize)
-                        .Scan(new SigScanTarget(11, "72 0E 81 E1 FF FF 00 00 66 8B 89 ???????? C3") { OnFound = (p, s, addr) => (IntPtr)p.ReadValue<int>(addr) });
-                    if (!WRAMbase.IsZero())
+                    ram_base = new SignatureScanner(Helper.game, entry.BaseAddress, (int)entry.RegionSize).Scan(new SigScanTarget(11, "72 0E 81 E1 FF FF 00 00 66 8B 89 ?? ?? ?? ?? C3") { OnFound = (p, s, addr) => (IntPtr)p.ReadValue<int>(addr) });
+
+                    if (!ram_base.IsZero())
                         break;
                 }
-                WRAMbase.ThrowIfZero();
-                Endianess = Endianess.LittleEndian;
-                break;
+            }
+            else if (currentCore.ModuleName == "genesis_plus_gx_libretro.dll" || currentCore.ModuleName == "genesis_plus_gx_wide_libretro.dll")
+            {
+                ram_base = Helper.game.Is64Bit() switch
+                {
+                    true => scanner.ScanOrThrow(new SigScanTarget(3, "48 8D 0D ?? ?? ?? ?? 4C 8B 2D") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) }),
+                    false => scanner.ScanOrThrow(new SigScanTarget(1, "A3 ?? ?? ?? ?? 29 F9") { OnFound = (p, s, addr) => p.ReadPointer(addr) }),
+                };
+            }
+            else if (currentCore.ModuleName == "picodrive_libretro.dll")
+            {
+                ram_base = Helper.game.Is64Bit() switch
+                {
+                    true => scanner.ScanOrThrow(new SigScanTarget(3, "48 8D 0D ?? ?? ?? ?? 41 B8") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) }),
+                    false => scanner.ScanOrThrow(new SigScanTarget(1, "B9 ?? ?? ?? ?? C1 EF 10") { OnFound = (p, s, addr) => p.ReadPointer(addr) }),
+                };
+            }
+            else
+                throw new NotImplementedException();
 
-            case "genesis_plus_gx_libretro.dll":
-            case "genesis_plus_gx_wide_libretro.dll":
-                scanner = new SignatureScanner(game, CurrentCore.BaseAddress, CurrentCore.ModuleMemorySize);
-                WRAMbase = game.Is64Bit()
-                    ? scanner.ScanOrThrow(new SigScanTarget(3, "48 8D 0D ???????? 4C 8B 2D ????????") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) })
-                    : scanner.ScanOrThrow(new SigScanTarget(1, "A3 ???????? 29 F9") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
-                Endianess = Endianess.LittleEndian;
-                break;
+            ram_base.ThrowIfZero();
 
-            case "picodrive_libretro.dll":
-                scanner = new SignatureScanner(game, CurrentCore.BaseAddress, CurrentCore.ModuleMemorySize);
-                WRAMbase = game.Is64Bit()
-                    ? scanner.ScanOrThrow(new SigScanTarget(3, "48 8D 0D ???????? 41 B8 ????????") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) })
-                    : scanner.ScanOrThrow(new SigScanTarget(1, "B9 ???????? C1 EF 10") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
-                Endianess = Endianess.LittleEndian;
-                break;
-
-            default:
-                throw new Exception();
+            Debugs.Info("  => Hooked to emulator: Retroarch");
+            Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        bool checkIfAlive() => game.ReadBytes(CurrentCore.BaseAddress, 1, out _);
-
-
-        Debugs.Info("  => Hooked to emulator: Retroarch");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
-
-        return Tuple.Create(WRAMbase, checkIfAlive);
+        public override bool KeepAlive()
+        {
+            return Helper.game.ReadBytes(core_base_address, 1, out _);
+        }
     }
 }

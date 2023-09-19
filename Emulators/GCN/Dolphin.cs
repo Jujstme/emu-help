@@ -1,19 +1,28 @@
-﻿using System;
+﻿using LiveSplit.ComponentUtil;
 using System.Linq;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
 
-public partial class GCN
+namespace LiveSplit.EMUHELP.GCN
 {
-    private Tuple<IntPtr, Func<bool>> Dolphin()
+    internal class Dolphin : GCNBase
     {
-        IntPtr MEM1 = game.MemoryPages(true).First(p => p.Type == MemPageType.MEM_MAPPED && p.State == MemPageState.MEM_COMMIT && (int)p.RegionSize == 0x2000000).BaseAddress;
-        bool checkIfAlive() => game.ReadBytes(MEM1, 1, out _);
-        Endianess = Endianess.BigEndian;
+        public Dolphin(HelperBase helper) : base(helper)
+        {
+            Endian = Endianness.Endian.Big;
 
-        Debugs.Info("  => Hooked to emulator: Dolphin");
-        Debugs.Info($"  => MEM1 address found at 0x{MEM1.ToString("X")}");
+            MEM1 = Helper.game.MemoryPages(true)
+                .First(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x2000000
+                    && Helper.game.ReadValue<uint>(p.BaseAddress + 0x1C) == 0x3D9F33C2)
+                .BaseAddress;
 
-        return Tuple.Create(MEM1, (Func<bool>)checkIfAlive);
+            Debugs.Info("  => Hooked to emulator: Dolphin");
+
+            if (!MEM1.IsZero())
+                Debugs.Info($"  => MEM1 address found at 0x{MEM1.ToString("X")}");
+        }
+
+        public override bool KeepAlive()
+        {
+            return Helper.game.ReadBytes(MEM1, 1, out _);
+        }
     }
 }

@@ -1,20 +1,38 @@
 ﻿using System;
-using System.Linq;
 using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
 
-public partial class PS1
+namespace LiveSplit.EMUHELP.PS1
 {
-    private Tuple<IntPtr, Func<bool>> Duckstation()
+    internal class Duckstation : PS1Base
     {
-        IntPtr WRAMbase = game.MemoryPages(true).FirstOrDefault(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x200000).BaseAddress;
-        WRAMbase.ThrowIfZero();
+        private readonly IntPtr base_addr;
 
-        bool checkIfAlive() => game.ReadBytes(WRAMbase, 1, out _);
+        public Duckstation(HelperBase helper) : base(helper)
+        {
+            var game = Helper.game;
 
-        Debugs.Info("  => Hooked to emulator: Duckstation");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
+            if (!game.Is64Bit())
+                throw new Exception();
 
-        return Tuple.Create(WRAMbase, checkIfAlive);
+            base_addr = game.SafeSigScanOrThrow(new SigScanTarget(3, "48 89 0D ???????? B8") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) });
+            ram_base = game.ReadPointer(base_addr);
+
+            Debugs.Info("  => Hooked to emulator: Duckstation");
+
+            if (ram_base != IntPtr.Zero)
+                Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
+        }
+
+        public override bool KeepAlive()
+        {
+            var success = Helper.game.ReadPointer(base_addr, out var addr);
+
+            if (success)
+            {
+                ram_base = addr;
+                return true;
+            } else
+                return false;
+        }
     }
 }

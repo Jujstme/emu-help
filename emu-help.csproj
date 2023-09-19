@@ -24,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <LangVersion>11.0</LangVersion>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>lib\</OutputPath>
@@ -34,56 +35,73 @@
     <DefineConstants>DEBUG</DefineConstants>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <DebugSymbols>false</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LiveSplit.Core">
-      <HintPath>..\..\..\..\..\Program Files (x86)\LiveSplit\LiveSplit.Core.dll</HintPath>
+      <HintPath>..\..\..\Desktop\Nuova cartella (3)\LiveSplit.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Emulators\SNES\EmuHawk.cs" />
-    <Compile Include="Emulators\SNES\Snes9x.cs" />
-    <Compile Include="SNES.cs" />
+    <Compile Include="AutoSplitterScript\Actions.Action.cs" />
+    <Compile Include="AutoSplitterScript\Actions.cs" />
+    <Compile Include="AutoSplitterScript\Script.cs" />
+    <Compile Include="AutoSplitterScript\timer.cs" />
     <Compile Include="Common\EmuBase.cs" />
-    <Compile Include="Emulators\SMS\BlastEm.cs" />
-    <Compile Include="Emulators\SMS\Retroarch.cs" />
-    <Compile Include="Emulators\SMS\Fusion.cs" />
-    <Compile Include="SMS.cs" />
-    <Compile Include="Emulators\Genesis\BlastEm.cs" />
-    <Compile Include="Emulators\Genesis\Retroarch.cs" />
-    <Compile Include="Emulators\Genesis\SEGAClassics.cs" />
-    <Compile Include="Emulators\Genesis\Fusion.cs" />
-    <Compile Include="Emulators\Genesis\Gens.cs" />
-    <Compile Include="Emulators\Genesis\EmuHawk.cs" />
-    <Compile Include="Emulators\SMS\EmuHawk.cs" />
-    <Compile Include="Genesis.cs" />
-    <Compile Include="Emulators\PS2\Retroarch.cs" />
-    <Compile Include="Emulators\PS2\PCSX2.cs" />
-    <Compile Include="PS2.cs" />
-    <Compile Include="Emulators\Wii\Dolphin.cs" />
-    <Compile Include="Wii.cs" />
-    <Compile Include="Common\FakeMemoryWatchers.cs" />
+    <Compile Include="Emulators\GBA\Base.cs" />
+    <Compile Include="Emulators\GBA\mGBA.cs" />
+    <Compile Include="Emulators\GBA\NoCashGBA.cs" />
+    <Compile Include="Emulators\GBA\Retroarch.cs" />
+    <Compile Include="Emulators\GBA\VisualBoyAdvance.cs" />
+    <Compile Include="Emulators\GCN\Base.cs" />
     <Compile Include="Emulators\GCN\Dolphin.cs" />
-    <Compile Include="GameCube.cs" />
-    <Compile Include="Emulators\PS1\EmuHawk.cs" />
-    <Compile Include="Emulators\PS1\Xebra.cs" />
+    <Compile Include="Emulators\GCN\Retroarch.cs" />
+    <Compile Include="Emulators\Genesis\Base.cs" />
+    <Compile Include="Emulators\Genesis\Fusion.cs" />
+    <Compile Include="Emulators\Genesis\BlastEm.cs" />
+    <Compile Include="Emulators\Genesis\Gens.cs" />
+    <Compile Include="Emulators\Genesis\Retroarch.cs" />
+    <Compile Include="Emulators\Genesis\SegaClassics.cs" />
     <Compile Include="Emulators\PS1\PCSX_Redux.cs" />
+    <Compile Include="Emulators\PS1\Base.cs" />
+    <Compile Include="Common\HelperBase.cs" />
+    <Compile Include="Common\FakeMemoryWatchers.cs" />
     <Compile Include="Emulators\PS1\Retroarch.cs" />
+    <Compile Include="Emulators\PS1\Xebra.cs" />
     <Compile Include="Emulators\PS1\pSX.cs" />
     <Compile Include="Emulators\PS1\Duckstation.cs" />
     <Compile Include="Common\Methods.cs" />
     <Compile Include="Emulators\PS1\ePSXe.cs" />
     <Compile Include="Common\DebugOutputs.cs" />
     <Compile Include="Common\ProcessHook.cs" />
+    <Compile Include="AutoSplitterScript\ReflectionExt.cs" />
+    <Compile Include="Emulators\PS2\Retroarch.cs" />
+    <Compile Include="Emulators\PS2\PCSX2.cs" />
+    <Compile Include="Emulators\PS2\Base.cs" />
+    <Compile Include="Emulators\SMS\Base.cs" />
+    <Compile Include="Emulators\SMS\Fusion.cs" />
+    <Compile Include="Emulators\SMS\BlastEm.cs" />
+    <Compile Include="Emulators\SMS\Retroarch.cs" />
+    <Compile Include="Emulators\WII\Base.cs" />
+    <Compile Include="Emulators\WII\Dolphin.cs" />
+    <Compile Include="Emulators\WII\Retroarch.cs" />
+    <Compile Include="WII.cs" />
+    <Compile Include="SMS.cs" />
+    <Compile Include="Genesis.cs" />
+    <Compile Include="GBA.cs" />
+    <Compile Include="GCN.cs" />
+    <Compile Include="PS2.cs" />
     <Compile Include="PS1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>rename "$(TargetPath)" "emu-help"</PostBuildEvent>

@@ -1,46 +1,40 @@
 ﻿using System;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
-using LiveSplit.EMUHELP.PS1;
+using LiveSplit.EMUHELP.GCN;
 
-public class Playstation : PS1 { }
+public class Gamecube : GCN { }
 
-public class Playstation1 : PS1 { }
+public class GameCube : GCN { }
 
-public partial class PS1 : HelperBase
+public partial class GCN : HelperBase
 {
-    private PS1Base emu;
-    private IntPtr emu_base => emu.ram_base;
+    private GCNBase emu;
+    private IntPtr MEM1 => emu.MEM1;
+    private Endianness.Endian Endian => emu.Endian;
 
-    public PS1(bool generateCode) : base(generateCode)
+
+    public GCN(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
         {
-            "ePSXe",
-            "psxfin",
-            "duckstation-qt-x64-ReleaseLTCG",
-            "duckstation-nogui-x64-ReleaseLTCG",
+            "Dolphin",
             "retroarch",
-            "pcsx-redux.main",
-            "xebra",
         };
 
         GameProcess = new ProcessHook(ProcessNames);
-        Debugs.Info("  => PS1 Helper started");
+        Debugs.Info("  => GCN Helper started");
     }
 
-    public PS1()
+    public GCN()
         : this(true) { }
 
     protected override void InitActions()
     {
-        emu = game.ProcessName.ToLower() switch {
-            "epsxe" => new ePSXe(this),
-            "duckstation-qt-x64-releaseltcg" or "duckstation-nogui-x64-releaseltcg" => new Duckstation(this),
-            "psxfin" => new pSX(this),
-            "xebra" => new Xebra(this),
+        emu = game.ProcessName switch
+        {
+            "Dolphin" => new Dolphin(this),
             "retroarch" => new Retroarch(this),
-            "pcsx-redux.main" => new PcsxRedux(this),
             _ => throw new NotImplementedException(),
         };
 
@@ -72,43 +66,33 @@ public partial class PS1 : HelperBase
         }
     }
 
-    public T ReadValue<T>(uint offset) where T : struct
+    public T ReadValue<T>(uint offset) where T : unmanaged
     {
-        if (emu_base == null)
+        if (MEM1 == null)
             return default;
 
         var defOffset = offset;
 
-        if (defOffset >= 0x80000000 && defOffset < 0x80200000)
-            defOffset -= 0x80000000;
-        else if ((defOffset > 0x1FFFFF && defOffset < 0x80000000) || defOffset > 0x801FFFFF)
+        if ((defOffset > 0x017FFFFF && defOffset < 0x80000000) || defOffset > 0x817FFFFF)
             return default;
+        else if (defOffset >= 0x80000000 && defOffset <= 0x817FFFFF)
+            defOffset -= 0x80000000;
 
-        return game.ReadValue<T>((IntPtr)((long)emu_base + defOffset));
+        return game.ReadValue<T>((IntPtr)((long)MEM1 + defOffset)).FromEndian(Endian);
     }
     
     public string ReadString(int length, uint offset)
     {
-        if (emu_base == null)
+        if (MEM1 == null)
             return default;
 
         var defOffset = offset;
 
-        if (defOffset >= 0x80000000 && defOffset < 0x80200000)
-            defOffset -= 0x80000000;
-        else if ((defOffset > 0x1FFFFF && defOffset < 0x80000000) || defOffset > 0x801FFFFF)
+        if ((defOffset > 0x017FFFFF && defOffset < 0x80000000) || defOffset > 0x817FFFFF)
             return default;
+        else if (defOffset >= 0x80000000 && defOffset <= 0x817FFFFF)
+            defOffset -= 0x80000000;
 
-        return game.ReadString((IntPtr)((long)emu_base + defOffset), length);
-    }
-
-    enum Emulator
-    {
-        ePSXe,
-        pSX,
-        Duckstation,
-        Retroarch,
-        PCSXRedux,
-        Xebra,
+        return game.ReadString((IntPtr)((long)MEM1 + defOffset), length);
     }
 }

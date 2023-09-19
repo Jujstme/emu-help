@@ -1,25 +1,35 @@
-﻿using System;
+﻿using LiveSplit.ComponentUtil;
 using System.Linq;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
 
-public partial class Wii
+namespace LiveSplit.EMUHELP.WII
 {
-    private Tuple<IntPtr, IntPtr, Func<bool>> Dolphin()
+    internal class Dolphin : WIIBase
     {
-        var pages = game.MemoryPages(true);
+        public Dolphin(HelperBase helper) : base(helper)
+        {
+            Endian = Endianness.Endian.Big;
 
-        IntPtr MEM1 = pages.First(p => p.Type == MemPageType.MEM_MAPPED && p.State == MemPageState.MEM_COMMIT && (int)p.RegionSize == 0x2000000).BaseAddress;
-        IntPtr MEM2 = pages.First(p => p.Type == MemPageType.MEM_MAPPED && p.State == MemPageState.MEM_COMMIT && (int)p.RegionSize == 0x4000000).BaseAddress;
+            MEM1 = Helper.game.MemoryPages(true)
+                .First(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x2000000
+                    && Helper.game.ReadValue<long>(p.BaseAddress + 0x3118) == 0x0000000400000004)
+                .BaseAddress;
 
-        bool checkIfAlive() => game.ReadBytes(MEM1, 1, out _) && game.ReadBytes(MEM2, 1, out _);
+            MEM2 = Helper.game.MemoryPages(true)
+                .First(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x4000000
+                    && (long)p.BaseAddress > (long)MEM1 && (long)p.BaseAddress < (long)MEM1 + 0x10000000)
+                .BaseAddress;
 
-        Endianess = Endianess.BigEndian;
+            Debugs.Info("  => Hooked to emulator: Dolphin");
 
-        Debugs.Info("  => Hooked to emulator: Dolphin");
-        Debugs.Info($"  => MEM1 address found at 0x{MEM1.ToString("X")}");
-        Debugs.Info($"  => MEM2 address found at 0x{MEM2.ToString("X")}");
+            if (!MEM1.IsZero())
+                Debugs.Info($"  => MEM1 address found at 0x{MEM1.ToString("X")}");
+            if (!MEM2.IsZero())
+                Debugs.Info($"  => MEM2 address found at 0x{MEM2.ToString("X")}");
+        }
 
-        return Tuple.Create(MEM1, MEM2, (Func<bool>)checkIfAlive);
+        public override bool KeepAlive()
+        {
+            return Helper.game.ReadBytes(MEM1, 1, out _) && Helper.game.ReadBytes(MEM2, 1, out _);
+        }
     }
 }

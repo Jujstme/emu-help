@@ -1,25 +1,35 @@
-﻿using System;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
+﻿using LiveSplit.ComponentUtil;
+using System;
 
-public partial class Genesis
+namespace LiveSplit.EMUHELP.Genesis
 {
-    private Tuple<IntPtr, Func<bool>> Fusion()
+    internal class Fusion : GenesisBase
     {
-        Endianess = Endianess.BigEndian;
+        private readonly IntPtr addr_base;
 
-        var Base = new SignatureScanner(game, game.MainModuleWow64Safe().BaseAddress, game.MainModuleWow64Safe().ModuleMemorySize)
-            .ScanOrThrow(new SigScanTarget(1, "75 2F 6A 01") { OnFound = (p, s, addr) => p.ReadPointer(addr + p.ReadValue<byte>(addr) + 3) });
+        public Fusion(HelperBase helper) : base(helper)
+        {
+            Endian = Endianness.Endian.Big;
 
-        
-        IntPtr WRAMbase = game.ReadPointer(Base);
-        WRAMbase.ThrowIfZero();
+            var ptr = Helper.game.SafeSigScanOrThrow(new SigScanTarget(1, "75 2F 6A 01"));
+            ptr += Helper.game.ReadValue<byte>(ptr + 3);
 
-        bool keepAlive() => game.ReadPointer(Base) == WRAMbase;
-        
-        Debugs.Info("  => Hooked to emulator: Fusion");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
+            addr_base = Helper.game.ReadPointer(ptr);
+            ram_base = Helper.game.ReadPointer(addr_base);
 
-        return Tuple.Create(WRAMbase, keepAlive);
+            Debugs.Info("  => Hooked to emulator: Fusion");
+            Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
+        }
+
+        public override bool KeepAlive()
+        {
+            if (Helper.game.ReadPointer(addr_base, out var addr))
+            {
+                ram_base = addr;
+                return true;
+            }
+            else
+                return false;
+        }
     }
 }

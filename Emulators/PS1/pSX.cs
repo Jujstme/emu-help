@@ -1,21 +1,45 @@
 ﻿using System;
-using System.Linq;
 using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
 
-public partial class PS1
+namespace LiveSplit.EMUHELP.PS1
 {
-    private Tuple<IntPtr, Func<bool>> pSX()
+    internal class pSX : PS1Base
     {
-        IntPtr WRAMbase = game.MemoryPages(true).FirstOrDefault(p => p.Type == MemPageType.MEM_PRIVATE && (int)p.RegionSize == 0x201000).BaseAddress;
-        WRAMbase.ThrowIfZero();
-        WRAMbase += 0x20;
+        public pSX(HelperBase helper) : base(helper)
+        {
+            var game = Helper.game;
+            var scanner = game.SigScanner();
 
-        bool checkIfAlive() => true;
+            SigScanTarget[] scan =
+            {
+                new SigScanTarget(2, "8B 15 ?? ?? ?? ?? 8D 34 1A") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                new SigScanTarget(1, "A1 ?? ?? ?? ?? 8D 34 18") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                new SigScanTarget(1, "A1 ?? ?? ?? ?? 8B 7C 24 14") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                new SigScanTarget(1, "A1 ?? ?? ?? ?? 8B 6C 24") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+            };
 
-        Debugs.Info("  => Hooked to emulator: pSX");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
+            var ptr = IntPtr.Zero;
 
-        return Tuple.Create(WRAMbase, checkIfAlive);
+            foreach (var entry in scan)
+            {
+                ptr = game.SafeSigScan(entry);
+
+                if (!ptr.IsZero())
+                    break;
+            }
+
+            ptr.ThrowIfZero();
+
+            ram_base = game.ReadPointer(ptr);
+            ram_base.ThrowIfZero();
+
+            Debugs.Info("  => Hooked to emulator: pSX");
+            Debugs.Info($"  => WRAM address found at 0x{ram_base.ToString("X")}");
+        }
+
+        public override bool KeepAlive()
+        {
+            return true;
+        }
     }
 }

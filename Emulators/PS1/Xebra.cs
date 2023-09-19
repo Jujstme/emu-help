@@ -1,18 +1,24 @@
-﻿using System;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
+﻿using LiveSplit.ComponentUtil;
 
-public partial class PS1
+namespace LiveSplit.EMUHELP.PS1
 {
-    private Tuple<IntPtr, Func<bool>> Xebra()
+    internal class Xebra : PS1Base
     {
-        IntPtr WRAMbase = game.SigScanner().ScanOrThrow(new SigScanTarget(1, "E8 ???????? E9 ???????? 89 C8 C1 F8 10") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) });
+        public Xebra(HelperBase helper) : base(helper)
+        {
+            var addr = Helper.game.SafeSigScanOrThrow(new SigScanTarget(1, "E8 ???????? E9 ???????? 89 C8 C1 F8 10")
+            { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) });
 
-        WRAMbase = new DeepPointer(WRAMbase + 0x16A, 0).Deref<IntPtr>(game);
+            ram_base = Helper.game.ReadPointer(Helper.game.ReadPointer(addr + 0x16A)); // new DeepPointer(addr + 0x16A, 0).Deref<IntPtr>(_helper.game);
+            ram_base.ThrowIfZero();
 
-        Debugs.Info("  => Hooked to emulator: Xebra");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
+            Debugs.Info("  => Hooked to emulator: Xebra");
+            Debugs.Info($"  => WRAM address found at 0x{ram_base.ToString("X")}");
+        }
 
-        return Tuple.Create(WRAMbase, (Func<bool>)(() => true));
+        public override bool KeepAlive()
+        {
+            return true;
+        }
     }
 }

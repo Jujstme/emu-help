@@ -1,29 +1,33 @@
-﻿using System;
+﻿using LiveSplit.ComponentUtil;
+using System;
 using System.Linq;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
 
-public partial class Genesis
+namespace LiveSplit.EMUHELP.Genesis
 {
-    private Tuple<IntPtr, Func<bool>> BlastEm()
+    internal class BlastEm : GenesisBase
     {
-        Endianess = Endianess.LittleEndian;
-
-        IntPtr WRAMbase = IntPtr.Zero;
-        foreach (var page in game.MemoryPages().Where(p => (int)p.RegionSize == 0x101000))
+        public BlastEm(HelperBase helper) : base(helper)
         {
-            WRAMbase = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize)
-                .Scan(new SigScanTarget(11, "72 0E 81 E1 FF FF 00 00 66 8B 89 ???????? C3") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+            Endian = Endianness.Endian.Little;
+            ram_base = IntPtr.Zero;
+
+            foreach (var entry in Helper.game.MemoryPages(true).Where(p => (int)p.RegionSize == 0x10100 && (p.AllocationProtect & MemPageProtect.PAGE_READWRITE) != 0))
+            {
+                ram_base = new SignatureScanner(Helper.game, entry.BaseAddress, (int)entry.RegionSize).Scan(new SigScanTarget(11, "72 0E 81 E1 FF FF 00 00 66 8B 89 ?? ?? ?? ?? C3") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+                
+                if (!ram_base.IsZero())
+                    break;
+            }
+
+            ram_base.ThrowIfZero();
             
-            if (!WRAMbase.IsZero())
-                break;
+            Debugs.Info("  => Hooked to emulator: SEGA Classics / SEGA Game Room");
+            Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        WRAMbase.ThrowIfZero();
-
-        Debugs.Info("  => Hooked to emulator: BlastEm");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
-
-        return Tuple.Create(WRAMbase, () => true);
+        public override bool KeepAlive()
+        {
+            return true;
+        }
     }
 }

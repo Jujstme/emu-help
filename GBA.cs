@@ -1,46 +1,44 @@
 ﻿using System;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
-using LiveSplit.EMUHELP.PS1;
+using LiveSplit.EMUHELP.GBA;
 
-public class Playstation : PS1 { }
+public class GameBoyAdvance : GBA { }
+public class GameboyAdvance : GBA { }
+public class Gameboyadvance : GBA { }
 
-public class Playstation1 : PS1 { }
-
-public partial class PS1 : HelperBase
+public partial class GBA : HelperBase
 {
-    private PS1Base emu;
-    private IntPtr emu_base => emu.ram_base;
+    private GBABase emu { get; set; }
+    private IntPtr ewram => emu.iwram;
+    private IntPtr iwram => emu.iwram;
 
-    public PS1(bool generateCode) : base(generateCode)
+    public GBA(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
         {
-            "ePSXe",
-            "psxfin",
-            "duckstation-qt-x64-ReleaseLTCG",
-            "duckstation-nogui-x64-ReleaseLTCG",
+            "visualboyadvance-m",
+            "VisualBoyAdvance",
+            "mGBA",
+            "NO$GBA.EXE",
             "retroarch",
-            "pcsx-redux.main",
-            "xebra",
         };
 
         GameProcess = new ProcessHook(ProcessNames);
-        Debugs.Info("  => PS1 Helper started");
+        Debugs.Info("  => GBA Helper started");
     }
 
-    public PS1()
+    public GBA()
         : this(true) { }
 
     protected override void InitActions()
     {
-        emu = game.ProcessName.ToLower() switch {
-            "epsxe" => new ePSXe(this),
-            "duckstation-qt-x64-releaseltcg" or "duckstation-nogui-x64-releaseltcg" => new Duckstation(this),
-            "psxfin" => new pSX(this),
-            "xebra" => new Xebra(this),
+        emu = game.ProcessName switch
+        {
+            "visualboyadvance-m" or "VisualBoyAdvance" => new VisualBoyAdvance(this),
+            "mGBA" => new mGBA(this),
+            "NO$GBA" => new NoCashGBA(this),
             "retroarch" => new Retroarch(this),
-            "pcsx-redux.main" => new PcsxRedux(this),
             _ => throw new NotImplementedException(),
         };
 
@@ -74,41 +72,80 @@ public partial class PS1 : HelperBase
 
     public T ReadValue<T>(uint offset) where T : struct
     {
-        if (emu_base == null)
+        return (offset >> 24) switch {
+            2 => ReadFromEWRAM<T>(offset),
+            3 => ReadFromIWRAM<T>(offset),
+            _ => default,
+        };
+    }
+
+    private T ReadFromEWRAM<T>(uint offset) where T : struct
+    {
+        if (ewram == null)
             return default;
 
         var defOffset = offset;
 
-        if (defOffset >= 0x80000000 && defOffset < 0x80200000)
-            defOffset -= 0x80000000;
-        else if ((defOffset > 0x1FFFFF && defOffset < 0x80000000) || defOffset > 0x801FFFFF)
+        if (defOffset >= 0x02000000 && defOffset < 0x02040000)
+            defOffset -= 0x02000000;
+        else if ((defOffset > 0x3FFFF && defOffset < 0x02000000) || defOffset >= 0x02040000)
             return default;
 
-        return game.ReadValue<T>((IntPtr)((long)emu_base + defOffset));
+        return game.ReadValue<T>((IntPtr)((long)ewram + defOffset));
     }
-    
+
+    private T ReadFromIWRAM<T>(uint offset) where T : struct
+    {
+        if (iwram == null)
+            return default;
+
+        var defOffset = offset;
+
+        if (defOffset >= 0x03000000 && defOffset < 0x03008000)
+            defOffset -= 0x03000000;
+        else if ((defOffset > 0x7FFF && defOffset < 0x03000000) || defOffset >= 0x03008000)
+            return default;
+
+        return game.ReadValue<T>((IntPtr)((long)iwram + defOffset));
+    }
+
     public string ReadString(int length, uint offset)
     {
-        if (emu_base == null)
+        return (offset >> 24) switch
+        {
+            2 => ReadStringFromEWRAM(length, offset),
+            3 => ReadStringFromIWRAM(length, offset),
+            _ => default,
+        };
+    }
+
+    private string ReadStringFromEWRAM(int length, uint offset)
+    {
+        if (ewram == null)
             return default;
 
         var defOffset = offset;
 
-        if (defOffset >= 0x80000000 && defOffset < 0x80200000)
-            defOffset -= 0x80000000;
-        else if ((defOffset > 0x1FFFFF && defOffset < 0x80000000) || defOffset > 0x801FFFFF)
+        if (defOffset >= 0x02000000 && defOffset < 0x02040000)
+            defOffset -= 0x02000000;
+        else if ((defOffset > 0x3FFFF && defOffset < 0x02000000) || defOffset >= 0x02040000)
             return default;
 
-        return game.ReadString((IntPtr)((long)emu_base + defOffset), length);
+        return game.ReadString((IntPtr)((long)ewram + defOffset), length);
     }
 
-    enum Emulator
+    private string ReadStringFromIWRAM(int length, uint offset)
     {
-        ePSXe,
-        pSX,
-        Duckstation,
-        Retroarch,
-        PCSXRedux,
-        Xebra,
+        if (iwram == null)
+            return default;
+
+        var defOffset = offset;
+
+        if (defOffset >= 0x03000000 && defOffset < 0x03008000)
+            defOffset -= 0x03000000;
+        else if ((defOffset > 0x7FFF && defOffset < 0x03000000) || defOffset >= 0x03008000)
+            return default;
+
+        return game.ReadString((IntPtr)((long)iwram + defOffset), length);
     }
 }

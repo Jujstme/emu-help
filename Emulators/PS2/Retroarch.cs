@@ -1,28 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using LiveSplit.ComponentUtil;
+using System;
 using System.Linq;
-using LiveSplit.ComponentUtil;
-using LiveSplit.EMUHELP;
 
-public partial class PS2
+namespace LiveSplit.EMUHELP.PS2
 {
-    private Tuple<IntPtr, Func<bool>> Retroarch()
+    internal class Retroarch : PS2Base
     {
-        var SupportedCores = new Dictionary<string, int>
+        private readonly bool is64Bit;
+        private readonly IntPtr core_base_address;
+
+        public Retroarch(HelperBase helper) : base(helper)
         {
-            { "pcsx2_libretro.dll", 0x2639000 }, 
-        };
+            is64Bit = Helper.game.Is64Bit();
 
-        game.ResetModulesWow64Cache();
-        ProcessModuleWow64Safe CurrentCore = game.ModulesWow64Safe().First(m => SupportedCores.Keys.Contains(m.ModuleName.ToLower()));
+            if (!is64Bit)
+                throw new Exception();
 
-        IntPtr WRAMbase = game.MemoryPages(true).First(p => p.AllocationProtect == MemPageProtect.PAGE_NOACCESS && (int)p.RegionSize == SupportedCores[CurrentCore.ModuleName.ToLower()]).BaseAddress;
+            string[] supportedCores =
+            {
+                "pcsx2_libretro.dll",
+            };
+            ProcessModuleWow64Safe currentCore = Helper.game.ModulesWow64Safe().First(m => supportedCores.Any(e => e == m.ModuleName));
+            core_base_address = currentCore.BaseAddress;
 
-        bool checkIfAlive() => game.ReadBytes(CurrentCore.BaseAddress, 1, out _);
+            SignatureScanner scanner = new(Helper.game, core_base_address, currentCore.ModuleMemorySize);
 
-        Debugs.Info("  => Hooked to emulator: Retroarch");
-        Debugs.Info($"  => WRAM address found at 0x{WRAMbase.ToString("X")}");
+            ram_base = scanner.ScanOrThrow(new SigScanTarget(3, "48 8B ?? ?? ?? ?? ?? 81 ?? F0 3F 00 00") { OnFound = (p, s, addr) => p.ReadPointer(addr + 0x4 + p.ReadValue<int>(addr)) });
+            ram_base.ThrowIfZero();
 
-        return Tuple.Create(WRAMbase, checkIfAlive);
+            Debugs.Info("  => Hooked to emulator: PCSX2");
+            Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
+        }
+
+        public override bool KeepAlive()
+        {
+            return Helper.game.ReadBytes(core_base_address, 1, out _);
+        }
     }
 }
