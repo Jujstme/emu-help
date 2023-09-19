@@ -25,7 +25,7 @@ namespace LiveSplit.EMUHELP
         If you would like to opt out of code generation, please use the following code in 'startup {}' instead.
         Make sure to call GetType() with the name of the specific helper you would like to use:
 
-            var type = Assembly.Load(File.ReadAllBytes(@"Components\emu-help")).GetType("PS1");
+            var type = Assembly.Load(File.ReadAllBytes("Components\emu-help-v2")).GetType("PS1");
             vars.Helper = Activator.CreateInstance(type, args: false);
 
         If you have any questions, please tag jujstme in the #auto-splitters channel

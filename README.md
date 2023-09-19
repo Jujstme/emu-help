@@ -28,7 +28,7 @@ state("LiveSplit") {}
 
 startup
 {
-    Assembly.Load(File.ReadAllBytes("Components/emu-help")).CreateInstance("PS1");
+    Assembly.Load(File.ReadAllBytes("Components/emu-help-v2")).CreateInstance("PS1");
 }
 ```
 

@@ -105,10 +105,10 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>rename "$(TargetPath)" "emu-help"</PostBuildEvent>
+    <PostBuildEvent>rename "$(TargetPath)" "emu-help-v2"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>del "emu-help"</PreBuildEvent>
+    <PreBuildEvent>del "emu-help-v2"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
