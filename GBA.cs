@@ -10,7 +10,7 @@ public class Gameboyadvance : GBA { }
 public partial class GBA : HelperBase
 {
     private GBABase emu { get; set; }
-    private IntPtr ewram => emu.iwram;
+    private IntPtr ewram => emu.ewram;
     private IntPtr iwram => emu.iwram;
 
     public GBA(bool generateCode) : base(generateCode)

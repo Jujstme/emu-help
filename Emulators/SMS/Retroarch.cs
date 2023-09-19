@@ -16,7 +16,7 @@ namespace LiveSplit.EMUHELP.SMS
                 "genesis_plus_gx_wide_libretro.dll",
                 "picodrive_libretro.dll",
                 "smsplus_libretro.dll",
-                // "gearsystem_libretro.dll",
+                "gearsystem_libretro.dll",
             };
 
             ProcessModuleWow64Safe currentCore = Helper.game.ModulesWow64Safe().First(m => supportedCores.Any(e => e == m.ModuleName));
@@ -36,6 +36,11 @@ namespace LiveSplit.EMUHELP.SMS
                 "smsplus_libretro.dll" => Helper.game.Is64Bit()
                     ? scanner.ScanOrThrow(new SigScanTarget(5, "31 F6 48 C7 05") { OnFound = (p, s, addr) => addr + 0x8 + p.ReadValue<int>(addr) })
                     : scanner.ScanOrThrow(new SigScanTarget(4, "83 FA 02 B8") { OnFound = (p, s, addr) => p.ReadPointer(addr) }),
+                "gearsystem_libretro.dll" => Helper.game.Is64Bit()
+                    ? scanner.ScanOrThrow(new SigScanTarget(8, "83 ?? 02 75 ?? 48 8B 0D ?? ?? ?? ?? E8") { OnFound = (p, s, addr) => {
+                        byte offset = p.ReadValue<byte>(addr + 13 + 0x4 + p.ReadValue<int>(addr + 13) + 0x3);
+                        IntPtr ptr = p.ReadPointer(p.ReadPointer(p.ReadPointer(addr + 0x4 + p.ReadValue<int>(addr)) + 0x0) + offset); ptr.ThrowIfZero(); return ptr + 0xC000; } })
+                    : scanner.ScanOrThrow(new SigScanTarget(7, "83 ?? 02 75 ?? 8B ?? ?? ?? ?? ?? E8") { OnFound = (p, s, addr) => { var ptr = p.ReadPointer(p.ReadPointer(p.ReadPointer(p.ReadPointer(addr)) + 0x0) + 0xC); ptr.ThrowIfZero(); return ptr + 0xC000; } }),
                 _ => throw new NotImplementedException(),
             };
 
