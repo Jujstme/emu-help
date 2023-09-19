@@ -53,6 +53,7 @@
     <Compile Include="AutoSplitterScript\timer.cs" />
     <Compile Include="Common\EmuBase.cs" />
     <Compile Include="Emulators\GBA\Base.cs" />
+    <Compile Include="Emulators\GBA\EmuHawk.cs" />
     <Compile Include="Emulators\GBA\mGBA.cs" />
     <Compile Include="Emulators\GBA\NoCashGBA.cs" />
     <Compile Include="Emulators\GBA\Retroarch.cs" />

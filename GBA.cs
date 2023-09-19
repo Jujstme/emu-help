@@ -22,6 +22,7 @@ public partial class GBA : HelperBase
             "mGBA",
             "NO$GBA.EXE",
             "retroarch",
+            "EmuHawk",
         };
 
         GameProcess = new ProcessHook(ProcessNames);
@@ -39,6 +40,7 @@ public partial class GBA : HelperBase
             "mGBA" => new mGBA(this),
             "NO$GBA" => new NoCashGBA(this),
             "retroarch" => new Retroarch(this),
+            "EmuHawk" => new EmuHawk(this),
             _ => throw new NotImplementedException(),
         };
 
