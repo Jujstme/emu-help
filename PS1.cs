@@ -23,6 +23,7 @@ public partial class PS1 : HelperBase
             "retroarch",
             "pcsx-redux.main",
             "xebra",
+            "mednafen"
         };
 
         GameProcess = new ProcessHook(ProcessNames);
@@ -41,6 +42,7 @@ public partial class PS1 : HelperBase
             "xebra" => new Xebra(this),
             "retroarch" => new Retroarch(this),
             "pcsx-redux.main" => new PcsxRedux(this),
+            "mednafen" => new Mednafen(this),
             _ => throw new NotImplementedException(),
         };
 
