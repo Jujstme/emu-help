@@ -12,6 +12,7 @@ namespace LiveSplit.EMUHELP.SMS
             base_addr = Helper.game.SafeSigScanOrThrow(new SigScanTarget(4, "74 C8 83 3D") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
             ram_base = Helper.game.ReadPointer(base_addr);
             ram_base.ThrowIfZero();
+            ram_base += 0xC000;
 
             Debugs.Info("  => Hooked to emulator: Fusion");
             Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
