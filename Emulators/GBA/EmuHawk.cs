@@ -12,9 +12,12 @@ namespace LiveSplit.EMUHELP.GBA
         {
             core_base = Helper.game.ModulesWow64Safe().First(m => m.ModuleName == "mgba.dll").BaseAddress;
 
-            var mGBA = new mGBA(Helper);
-            ewram = mGBA.ewram;
-            iwram = mGBA.iwram;
+            ewram = Helper.game
+                .MemoryPages(true)
+                .First(p => (int)p.RegionSize == 0x48000 && (p.AllocationProtect & MemPageProtect.PAGE_READWRITE) != 0)
+                .BaseAddress;
+
+            iwram = ewram + 0x40000;
 
             Debugs.Info("  => Hooked to emulator: BizHawk");
             Debugs.Info($"  => EWRAM address found at 0x{ewram.ToString("X")}");

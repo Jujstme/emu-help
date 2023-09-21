@@ -67,8 +67,14 @@ namespace LiveSplit.EMUHELP.GBA
 
         private IntPtr[] mGBA()
         {
-            var gba = new mGBA(Helper);
-            return new IntPtr[] { gba.ewram, gba.iwram };
+            var mgba_ewram = Helper.game
+                .MemoryPages(true)
+                .First(p => (int)p.RegionSize == 0x48000 && (p.AllocationProtect & MemPageProtect.PAGE_READWRITE) != 0)
+                .BaseAddress;
+
+            var mgba_iwram = ewram + 0x40000;
+
+            return new IntPtr[] { mgba_ewram, mgba_iwram };
         }
 
         private IntPtr[] gpSP(ProcessModuleWow64Safe currentCore, bool is64Bit)
