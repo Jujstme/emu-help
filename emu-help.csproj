@@ -88,6 +88,7 @@
     <Compile Include="Emulators\SMS\Base.cs" />
     <Compile Include="Emulators\SMS\Fusion.cs" />
     <Compile Include="Emulators\SMS\BlastEm.cs" />
+    <Compile Include="Emulators\SMS\Mednafen.cs" />
     <Compile Include="Emulators\SMS\Retroarch.cs" />
     <Compile Include="Emulators\WII\Base.cs" />
     <Compile Include="Emulators\WII\Dolphin.cs" />

@@ -18,6 +18,7 @@ public partial class SMS : HelperBase
             "retroarch",
             "blastem",
             "Fusion",
+            "mednafen",
         };
 
         GameProcess = new ProcessHook(ProcessNames);
@@ -34,6 +35,7 @@ public partial class SMS : HelperBase
             "retroarch" => new Retroarch(this),
             "fusion" => new Fusion(this),
             "blastem" => new BlastEm(this),
+            "mednafen" => new Mednafen(this),
             _ => throw new NotImplementedException(),
         };
 
