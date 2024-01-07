@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using EMUHELP.Extensions;
@@ -123,6 +125,38 @@ namespace LiveSplit.EMUHELP
             if (ptr.IsZero())
                 throw new SigscanFailedException();
             return ptr;
+        }
+
+        /// <summary>
+        /// Enumerates through the debug symbols defined in the module specified.
+        /// As this requires reading the header of the module from memory, providing
+        /// a valid Process is required.
+        /// </summary>
+        /// <param name="module">A ProcessModuleWow64Safe with a valid PE header</param>
+        /// <param name="process">The parent Process of the specified module</param>
+        /// <returns></returns>
+        public static IEnumerable<Symbol> GetSymbols(this ProcessModuleWow64Safe module, Process process)
+        {
+            IntPtr baseAddress = module.BaseAddress;
+            bool is64Bit = process.Is64Bit();
+
+            if (process.ReadValue(baseAddress + 0x3C, out int e_lfanew)
+                && process.ReadValue(baseAddress + e_lfanew + (is64Bit ? 0x88 : 0x78), out int exportDir)
+                && exportDir != 0)
+            {
+                if (process.ReadValue(baseAddress + exportDir, out Symbol.ExportedSymbolsTableDef symbolsDef))
+                {
+                    for (int i = 0; i < symbolsDef.numberOfFunctions; i++)
+                    {
+                        if (process.ReadValue(baseAddress + symbolsDef.functionAddressArrayIndex + i * 4, out int addr)
+                            && process.ReadValue(baseAddress + symbolsDef.functionNameArrayIndex + i * 4, out int nameAddr)
+                            && process.ReadString(baseAddress + nameAddr, 255, out string name))
+                        {
+                            yield return new Symbol(baseAddress + addr, name);
+                        }
+                    }
+                }
+            }
         }
 
         public static void ResetModulesWow64Cache(this Process process)

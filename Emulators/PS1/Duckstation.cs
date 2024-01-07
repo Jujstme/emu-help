@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.EMUHELP.PS1
@@ -14,7 +15,7 @@ namespace LiveSplit.EMUHELP.PS1
             if (!game.Is64Bit())
                 throw new Exception();
 
-            base_addr = game.SafeSigScan(new SigScanTarget(3, "48 89 ?? ?? ?? ?? ?? ?? FF FF 1F 00") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) });
+            base_addr = game.MainModuleWow64Safe().GetSymbols(game).FirstOrDefault(s => s.Name == "RAM").Address;
 
             if (base_addr.IsZero())
                 base_addr = game.SafeSigScanOrThrow(new SigScanTarget(3, "48 89 0D ???????? B8") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) });
