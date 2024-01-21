@@ -1,75 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Helper.Data.AutoSplitter;
+using System.Threading.Tasks;
 using LiveSplit.EMUHELP;
 
-public abstract class HelperBase
+public abstract partial class HelperBase
 {
-    private bool isASLCodeGenerating { get; set; }
-
-    // Stuff related to the emulator
     internal ProcessHook GameProcess { get; set; }
     internal Process game => GameProcess.Game;
-
-    // Watchers
-    protected Dictionary<string, Tuple<TypeCode, uint, uint[]>> _load = new();
-    protected Dictionary<string, int> _stringLoad { get; set; } = new();
-    public Func<HelperBase, bool> Load { get; set; }
-    internal FakeMemoryWatcherList Watchers { get; set; }
-
-    // Abstracts
-    public FakeMemoryWatcher this[string index] => Watchers[index];
+    internal virtual Endianness.Endian Endian => Endianness.Endian.Little;
     protected abstract void InitActions();
     protected Func<bool> KeepAlive { get; set; } = () => false;
-
-    /// <summary>
-    /// Creates a new instance of the Helper class with code generation.
-    /// </summary>
-    public HelperBase()
-        : this(true) { }
-
-    /// <summary>
-    /// Creates a new instance of the Helper class, optionally enabling the code generation.
-    /// Code generation must be kept disabled if using the helper in a component or outside 
-    /// an .asl script.
-    /// </summary>
-    /// <param name="generateCode"></param>
-    public HelperBase(bool generateCode)
-    {
-        //Manager = this;
-        isASLCodeGenerating = generateCode;
-
-        if (generateCode)
-            ASL_Startup();
-        else
-        {
-            Debugs.Welcome();
-            Debugs.Info();
-            Debugs.Info("Loading emu-help...");
-        }
-    }
-
-    protected virtual void ASL_Startup()
-    {
-        if (Actions.Current != "startup")
-        {
-            string msg = "The helper may only be instantiated in the 'startup {}' action.";
-            throw new InvalidOperationException(msg);
-        }
-
-        Debugs.Welcome();
-        Debugs.Info();
-        Debugs.Info("Loading emu-help...");
-            
-        Debugs.Info("  => Generating code...");
-
-        Script.vars.Helper = this;
-        Debugs.Info("    => Set helper to vars.Helper.");
-        Actions.update.Prepend("if (!vars.Helper.Update()) return false;\n");
-        Actions.shutdown.Prepend("vars.Helper.Dispose();\n");
-    }
 
     public bool Update()
     {
@@ -89,17 +30,6 @@ public abstract class HelperBase
                 Script.current[entry.Name] = entry.Current;
 
         return true;
-    }
-
-    public void Make<T>(string name, uint offset, params uint[] offsets) where T : struct
-    {
-        _load[name] = Tuple.Create(Type.GetTypeCode(typeof(T)), offset, offsets);
-    }
-
-    public void MakeString(string name, int length, uint offset, params uint[] offsets)
-    {
-        _stringLoad[name] = length;
-        _load[name] = Tuple.Create(Type.GetTypeCode(typeof(string)), offset, offsets);
     }
 
     protected bool Init()
@@ -142,10 +72,5 @@ public abstract class HelperBase
         // At this point, if init has not been completed yet, return
         // false to avoid running the rest of the splitting logic.
         return GameProcess.InitStatus == GameInitStatus.Completed;
-    }
-
-    public void Dispose()
-    {
-        GameProcess?.Dispose();
     }
 }

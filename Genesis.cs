@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using LiveSplit.ComponentUtil;
 using LiveSplit.EMUHELP;
 using LiveSplit.EMUHELP.Genesis;
@@ -10,7 +11,7 @@ public partial class Genesis : HelperBase
 {
     private GenesisBase emu { get; set; }
     private IntPtr ram_base => emu.ram_base;
-    private Endianness.Endian Endian => emu.Endian;
+    internal override Endianness.Endian Endian => emu.Endian;
 
     public Genesis(bool generateCode) : base(generateCode)
     {
@@ -44,50 +45,116 @@ public partial class Genesis : HelperBase
         };
 
         KeepAlive = emu.KeepAlive;
-
-        Watchers = new();
-        foreach (var watcher in _load)
-        {
-            FakeMemoryWatcher newWatcher = watcher.Value.Item1 switch
-            {
-                //TypeCode.Int32 => new FakeMemoryWatcher<int>(() => ReadValue<int>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Boolean => new FakeMemoryWatcher<bool>(() => ReadValue<bool>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Char => new FakeMemoryWatcher<char>(() => ReadValue<char>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.SByte => new FakeMemoryWatcher<sbyte>(() => ReadValue<sbyte>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Byte => new FakeMemoryWatcher<byte>(() => ReadValue<byte>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Int16 => new FakeMemoryWatcher<short>(() => ReadValue<short>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.UInt16 => new FakeMemoryWatcher<ushort>(() => ReadValue<ushort>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.UInt32 => new FakeMemoryWatcher<uint>(() => ReadValue<uint>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.Int64 => new FakeMemoryWatcher<long>(() => ReadValue<long>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.UInt64 => new FakeMemoryWatcher<ulong>(() => ReadValue<ulong>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.Single => new FakeMemoryWatcher<float>(() => ReadValue<float>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.Double => new FakeMemoryWatcher<double>(() => ReadValue<double>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.Decimal => new FakeMemoryWatcher<decimal>(() => ReadValue<decimal>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.DateTime => new FakeMemoryWatcher<DateTime>(() => ReadValue<DateTime>(watcher.Value.Item2)) { Name = watcher.Key },
-                //TypeCode.String => new FakeMemoryWatcher<string>(() => ReadString(_stringLoad[watcher.Key], watcher.Value.Item2)) { Name = watcher.Key },
-                _ => throw new NotImplementedException(),
-            };
-            Watchers.Add(newWatcher);
-            Debugs.Info($"Watcher \"{watcher.Key}\" added successfully.");
-        }
+        MakeWatchers();
     }
 
-    public T ReadValue<T>(uint offset) where T : unmanaged
+    internal override bool IsAddressInBounds<T>(ulong address)
     {
-        if (ram_base == null)
-            return default;
+        var defOffset = address;
 
-        var defOffset = offset;
-
-        if ((offset > 0xFFFF && offset < 0xFF0000) || offset > 0xFFFFFF)
-            return default;
-        else if (offset >= 0xFF0000 && offset <= 0xFFFFFF)
+        if ((defOffset > 0xFFFF && defOffset < 0xFF0000) || defOffset > 0xFFFFFF)
+            return false;
+        else if (defOffset >= 0xFF0000 && defOffset <= 0xFFFFFF)
             defOffset -= 0xFF0000;
 
-        uint toggle = Endian == Endianness.Endian.Little && Marshal.SizeOf(typeof(T)) == 1 ? (uint)1 : 0;
+        return defOffset + (ulong)Marshal.SizeOf<T>() <= 0x10000;
+    }
 
-        defOffset ^= toggle;
+    internal override bool IsStringAddressInBounds(ulong address, int stringLength)
+    {
+        var defOffset = address;
 
-        return game.ReadValue<T>((IntPtr)((long)ram_base + defOffset)).FromEndian(Endian);
+        if ((defOffset > 0xFFFF && defOffset < 0xFF0000) || defOffset > 0xFFFFFF)
+            return false;
+        else if (defOffset >= 0xFF0000 && defOffset <= 0xFFFFFF)
+            defOffset -= 0xFF0000;
+
+        return defOffset + (ulong)stringLength <= 0x10000;
+    }
+
+    public override bool TryGetAddress(ulong address, out IntPtr realAddress)
+    {
+        realAddress = default;
+     
+        if (ram_base == null)
+            return false;
+
+        var defOffset = address;
+
+        if ((defOffset > 0xFFFF && defOffset < 0xFF0000) || defOffset > 0xFFFFFF)
+            return false;
+        else if (defOffset >= 0xFF0000 && defOffset <= 0xFFFFFF)
+            defOffset -= 0xFF0000;
+
+        realAddress = (IntPtr)((ulong)ram_base + defOffset);
+        return true;
+    }
+
+    public override bool TryReadValue<T>(ulong address, out T value, params uint[] offsets)
+    {
+        value = default;
+
+        if (ram_base == null || !IsAddressInBounds<T>(address))
+            return false;
+
+        var alignedOffset = (int)address & ~1;
+        if (!TryGetAddress((ulong)alignedOffset, out IntPtr realAddress))
+            return false;
+
+        int size = Marshal.SizeOf<T>();
+        int misalignment = (int)(address & 1);
+
+        var f_size = size + misalignment;
+        if ((f_size & 1) != 0)
+            f_size++;
+
+        if (game.ReadBytes(realAddress, f_size, out var buf))
+        {
+            if (this.Endian == Endianness.Endian.Little)
+            {
+                for (int i = 0; i < buf.Length; i += 2)
+                    (buf[i + 1], buf[i]) = (buf[i], buf[i + 1]);
+            }
+
+            if (buf.TryConvertTo<T>(misalignment, out T tempValue))
+            {
+                value = tempValue.FromEndian(Endian);
+                return true;
+            }
+
+        }
+
+        return default;
+    }
+    
+    public override bool TryReadString(ulong address, int length, out string value, params uint[] offsets)
+    {
+        value = default;
+
+        if (ram_base == null || !IsStringAddressInBounds(address, length))
+            return false;
+
+        var alignedOffset = (int)address & ~1;
+        if (!TryGetAddress((ulong)alignedOffset, out IntPtr realAddress))
+            return false;
+
+        int misalignment = (int)(address & 1);
+
+        var f_size = length + misalignment;
+        if ((f_size & 1) != 0)
+            f_size++;
+
+        if (game.ReadBytes(realAddress, f_size, out var buf))
+        {
+            if (this.Endian == Endianness.Endian.Little)
+            {
+                for (int i = 0; i < buf.Length; i += 2)
+                    (buf[i + 1], buf[i]) = (buf[i], buf[i + 1]);
+            }
+            value = Encoding.UTF8.GetString(buf, 0, length);
+            return true;
+        }
+
+        return default;
     }
 }

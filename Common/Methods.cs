@@ -166,6 +166,42 @@ namespace LiveSplit.EMUHELP
             //process.SetFieldValue<Dictionary<int, ProcessModuleWow64Safe[]>>("ModuleCache", new(), bindingFlags);
             typeof(ExtensionMethods).GetField("ModuleCache", bindingFlags).SetValue(null, new Dictionary<int, ProcessModuleWow64Safe[]>());
         }
+
+        /// <summary>
+        /// Reinterprets a certain byte array to any T. This function additionally checks if the byte array provided
+        /// is long enough to contain the type T you're trying to convert into.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="offset"></param>
+        /// <returns>True if successful, false otherwise.</returns>
+        public static bool TryConvertTo<T>(this byte[] obj, int offset, out T value) where T: unmanaged
+        {
+            value = default(T);
+            if (offset + Marshal.SizeOf<T>() > obj.Length)
+                return false;
+            GCHandle handle = GCHandle.Alloc(obj, GCHandleType.Pinned);
+            value = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject() + offset, typeof(T));
+            handle.Free();
+            return true;
+        }
+
+        /// <summary>
+        /// Reinterprets a certain byte array to any T. This function additionally checks if the byte array provided
+        /// is long enough to contain the type T you're trying to convert into.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="offset"></param>
+        /// <returns>A value of type T containing the same bytes as the original input, default(T) otherwise.</returns>
+        public static T ConvertTo<T>(this byte[] obj, int offset) where T : unmanaged
+        {
+            return TryConvertTo<T>(obj, offset, out T value) switch
+            {
+                true => value,
+                false => default(T),
+            };
+        }
     }
 
     public class SigscanFailedException : Exception
@@ -184,7 +220,7 @@ namespace LiveSplit.EMUHELP
             if (endian == Endian.Little)
                 return value;
 
-            var rawSize = Marshal.SizeOf(typeof(T));
+            var rawSize = Marshal.SizeOf<T>();
 
             if (rawSize == 1)
                 return value;

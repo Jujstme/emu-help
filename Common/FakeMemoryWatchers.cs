@@ -12,6 +12,12 @@ namespace LiveSplit.EMUHELP
                 watcher.Update();
         }
 
+        public void ResetAll()
+        {
+            foreach (var watcher in this)
+                watcher.Reset();
+        }
+
         public FakeMemoryWatcher this[string index] => this.First(w => w.Name == index);
     }
 
@@ -23,6 +29,11 @@ namespace LiveSplit.EMUHELP
         public object Old { get; protected set; } = default;
         public bool Changed { get; protected set; } = default;
         public abstract void Update();
+        public abstract void Reset();
+        public void SetFunc(object func)
+        {
+            _func = func;
+        }
     }
 
     public class FakeMemoryWatcher<T> : FakeMemoryWatcher
@@ -67,5 +78,23 @@ namespace LiveSplit.EMUHELP
 
             Changed = base.Old == null ? false : !Old.Equals(Current);
         }
+
+        /// <summary>
+        /// Resets the values stored in current FakeMemoryWatcher, including the
+        /// associated Func&lt;<typeparamref name="T"/>&gt; if defined.
+        /// </summary>
+        public override void Reset()
+        {
+            base.Current = default;
+            base.Old = default;
+            base.Changed = default;
+            base._func = null;
+        }
+
+        /// <summary>
+        /// Sets a new Func&lt;<typeparamref name="T"/>&gt; to be invoked when calling Update().
+        /// </summary>
+        /// <param name="func"></param>
+        public void SetFunc(Func<T> func) => base.SetFunc(func);
     }
 }

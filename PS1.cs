@@ -1,5 +1,5 @@
 ﻿using System;
-using LiveSplit.ComponentUtil;
+using System.Runtime.InteropServices;
 using LiveSplit.EMUHELP;
 using LiveSplit.EMUHELP.PS1;
 
@@ -47,70 +47,34 @@ public partial class PS1 : HelperBase
         };
 
         KeepAlive = emu.KeepAlive;
-
-        Watchers = new();
-        foreach (var watcher in _load)
-        {
-            FakeMemoryWatcher newWatcher = watcher.Value.Item1 switch
-            {
-                TypeCode.Int32 => new FakeMemoryWatcher<int>(() => ReadValue<int>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Boolean => new FakeMemoryWatcher<bool>(() => ReadValue<bool>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Char => new FakeMemoryWatcher<char>(() => ReadValue<char>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.SByte => new FakeMemoryWatcher<sbyte>(() => ReadValue<sbyte>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Byte => new FakeMemoryWatcher<byte>(() => ReadValue<byte>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Int16 => new FakeMemoryWatcher<short>(() => ReadValue<short>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.UInt16 => new FakeMemoryWatcher<ushort>(() => ReadValue<ushort>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.UInt32 => new FakeMemoryWatcher<uint>(() => ReadValue<uint>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Int64 => new FakeMemoryWatcher<long>(() => ReadValue<long>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.UInt64 => new FakeMemoryWatcher<ulong>(() => ReadValue<ulong>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Single => new FakeMemoryWatcher<float>(() => ReadValue<float>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Double => new FakeMemoryWatcher<double>(() => ReadValue<double>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.Decimal => new FakeMemoryWatcher<decimal>(() => ReadValue<decimal>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.DateTime => new FakeMemoryWatcher<DateTime>(() => ReadValue<DateTime>(watcher.Value.Item2)) { Name = watcher.Key },
-                TypeCode.String => new FakeMemoryWatcher<string>(() => ReadString(_stringLoad[watcher.Key], watcher.Value.Item2)) { Name = watcher.Key },
-                _ => throw new NotImplementedException(),
-            };
-            Watchers.Add(newWatcher);
-        }
+        MakeWatchers();
     }
 
-    public T ReadValue<T>(uint offset) where T : struct
+    public override bool TryGetAddress(ulong address, out IntPtr realAddress)
     {
-        if (emu_base == null)
-            return default;
+        realAddress = default;
 
-        var defOffset = offset;
+        if (emu_base == null)
+            return false;
+
+        var defOffset = address;
 
         if (defOffset >= 0x80000000 && defOffset < 0x80200000)
             defOffset -= 0x80000000;
-        else if ((defOffset > 0x1FFFFF && defOffset < 0x80000000) || defOffset > 0x801FFFFF)
-            return default;
+        else
+            return false;
 
-        return game.ReadValue<T>((IntPtr)((long)emu_base + defOffset));
-    }
-    
-    public string ReadString(int length, uint offset)
-    {
-        if (emu_base == null)
-            return default;
-
-        var defOffset = offset;
-
-        if (defOffset >= 0x80000000 && defOffset < 0x80200000)
-            defOffset -= 0x80000000;
-        else if ((defOffset > 0x1FFFFF && defOffset < 0x80000000) || defOffset > 0x801FFFFF)
-            return default;
-
-        return game.ReadString((IntPtr)((long)emu_base + defOffset), length);
+        realAddress = (IntPtr)((ulong)emu_base + defOffset);
+        return true;
     }
 
-    enum Emulator
+    internal override bool IsAddressInBounds<T>(ulong address)
     {
-        ePSXe,
-        pSX,
-        Duckstation,
-        Retroarch,
-        PCSXRedux,
-        Xebra,
+        return address + (ulong)Marshal.SizeOf(typeof(T)) <= 0x200000;
+    }
+
+    internal override bool IsStringAddressInBounds(ulong address, int stringLength)
+    {
+        return address + (ulong)stringLength <= 0x200000;
     }
 }
