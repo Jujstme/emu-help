@@ -21,7 +21,8 @@ namespace LiveSplit.EMUHELP
         /// <summary>
         /// Perform a signature scan, similarly to how it would achieve with SignatureScanner.Scan()
         /// </summary>
-        /// <returns>Address of the signature, if found. Otherwise, an Exception will be thrown.</returns>
+        /// <returns>An <see cref="IntPtr"/> conteining the address of the signature, if found.</returns>
+        /// <exception cref="SigscanFailedException"></exception>
         public static IntPtr ScanOrThrow(this SignatureScanner scanner, SigScanTarget target, int align = 1)
         {
             IntPtr tempAddr = scanner.Scan(target, align);
@@ -43,7 +44,7 @@ namespace LiveSplit.EMUHELP
         /// <summary>
         /// Checks whether a specific bit inside a byte value is set or not.
         /// </summary>
-        /// <param name="value">The byte value in which to perform the check</param>
+        /// <param name="value">The <see cref="byte"/> value in which to perform the check</param>
         /// <param name="bitPos">The bit position (from 0 to 7).</param>
         /// <returns>True if the bit is set, otherwise false.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Will be thrown if a bit was specified in a position outside the allowed interval.</exception>
@@ -55,17 +56,14 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// Checks if a provided IntPtr value is equal to IntPtr.Zero
+        /// Checks if a provided <see cref="IntPtr"/> is equal to <see cref="IntPtr.Zero"/>
         /// </summary>
         /// <param name="value"></param>
-        /// <returns>True if the value is IntPtr.Zero, false otherwise.</returns>
-        public static bool IsZero(this IntPtr value)
-        {
-            return value == IntPtr.Zero;
-        }
+        /// <returns>True if the value is <see cref="IntPtr.Zero"/>, false otherwise.</returns>
+        public static bool IsZero(this IntPtr value) => value == IntPtr.Zero;
 
         /// <summary>
-        /// Quickly creates a new SignatureScanner object. If no argument is specified, sigscanning will be performed in the MainModule memory space.
+        /// Quickly creates a new <see cref="SignatureScanner"/> object. If no argument is specified, sigscanning will be performed in the <see cref="Process.MainModule"/> memory space.
         /// </summary>
         /// <param name="process"></param>
         /// <returns></returns>
@@ -75,7 +73,7 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// Quickly creates a new SignatureScanner object.
+        /// Quickly creates a new <see cref="SignatureScanner"/> object for the address space of the specified <see cref="ProcessModuleWow64Safe"/>.
         /// </summary>
         /// <param name="process"></param>
         /// <returns></returns>
@@ -85,7 +83,7 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// Quickly creates a new SignatureScanner object.
+        /// Quickly creates a new <see cref="SignatureScanner"/> object for the address space of the specified <see cref="ProcessModule"/>.
         /// </summary>
         /// <param name="process"></param>
         /// <returns></returns>
@@ -95,12 +93,12 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// "Safe" signature scanner for problematic process in which the standard
-        /// sigscanning function might fail.
+        /// "Safe" version of the signature scanner for problematic process in which the standard
+        /// sigscanning function might fail due to memory access restrictions.
         /// </summary>
-        /// <param name="process"></param>
-        /// <param name="scanTarget"></param>
-        /// <returns></returns>
+        /// <param name="process">The target <see cref="Process"/> in which to perform the signature scan.</param>
+        /// <param name="scanTarget">A <see cref="SigScanTarget"/> instance containing the memory range in which to perform the pattern scanning.</param>
+        /// <returns>An <see cref="IntPtr"/> with the address of the found signature, <see cref="IntPtr.Zero"/> if the scan fails or if the signature is not found.</returns>
         public static IntPtr SafeSigScan(this Process process, SigScanTarget scanTarget)
         {
             IntPtr ptr = default;
@@ -119,6 +117,14 @@ namespace LiveSplit.EMUHELP
             return ptr;
         }
 
+        /// <summary>
+        /// "Safe" version of the signature scanner for problematic process in which the standard
+        /// sigscanning function might fail due to memory access restrictions.
+        /// </summary>
+        /// <param name="process">The target <see cref="Process"/> in which to perform the signature scan.</param>
+        /// <param name="scanTarget">A <see cref="SigScanTarget"/> instance containing the memory range in which to perform the pattern scanning.</param>
+        /// <returns>An <see cref="IntPtr"/> with the address of the found signature. If the scan fails or if the signature is not found, a <see cref="SigscanFailedException"/> is thrown.</returns>
+        /// <exception cref="SigscanFailedException"></exception>
         public static IntPtr SafeSigScanOrThrow(this Process process, SigScanTarget scanTarget)
         {
             var ptr = process.SafeSigScan(scanTarget);
@@ -128,9 +134,7 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// Enumerates through the debug symbols defined in the module specified.
-        /// As this requires reading the header of the module from memory, providing
-        /// a valid Process is required.
+        /// Enumerates through the debug symbols defined in the PE module specified.
         /// </summary>
         /// <param name="module">A ProcessModuleWow64Safe with a valid PE header</param>
         /// <param name="process">The parent Process of the specified module</param>
@@ -168,8 +172,7 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// Reinterprets a certain byte array to any T. This function additionally checks if the byte array provided
-        /// is long enough to contain the type T you're trying to convert into.
+        /// Reinterprets a certain byte array to any <see cref="T"/>. This function succeeds as long as the byte array provided is long enough to contain the type T you're trying to convert into.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
@@ -187,13 +190,12 @@ namespace LiveSplit.EMUHELP
         }
 
         /// <summary>
-        /// Reinterprets a certain byte array to any T. This function additionally checks if the byte array provided
-        /// is long enough to contain the type T you're trying to convert into.
+        /// Reinterprets a certain byte array to any <see cref="T"/>. This function succeeds as long as the byte array provided is long enough to contain the type T you're trying to convert into.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <param name="offset"></param>
-        /// <returns>A value of type T containing the same bytes as the original input, default(T) otherwise.</returns>
+        /// <returns>A value of type T containing the same bytes as the original input, <see cref="default(T)"/> otherwise.</returns>
         public static T ConvertTo<T>(this byte[] obj, int offset) where T : unmanaged
         {
             return TryConvertTo<T>(obj, offset, out T value) switch
@@ -206,6 +208,9 @@ namespace LiveSplit.EMUHELP
 
     public class SigscanFailedException : Exception
     {
+        /// <summary>
+        /// Indicates a missing or not found byte pattern inside the target memory scanned.
+        /// </summary>
         public SigscanFailedException() { }
         public SigscanFailedException(string message) : base(message) { }
     }
@@ -215,6 +220,13 @@ namespace LiveSplit.EMUHELP
     /// </summary>
     public static class Endianness
     {
+        /// <summary>
+        /// Converts any <see cref="UnmanagedType"/> by swapping its endianness. It's essentially a no-op if the value provided is specified to already be <see cref="Endian.Little"/>.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value"></param>
+        /// <param name="endian"></param>
+        /// <returns></returns>
         public static T FromEndian<T>(this T value, Endian endian) where T : unmanaged
         {
             if (endian == Endian.Little)
