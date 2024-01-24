@@ -8,9 +8,9 @@ namespace LiveSplit.EMUHELP.PS1
     {
         private readonly IntPtr core_base_address;
 
-        public Retroarch(HelperBase helper) : base(helper)
+        internal Retroarch(HelperBase helper) : base(helper)
         {
-            var game = Helper.game;
+            var game = Helper.Game;
 
             string[] supportedCores =
             {
@@ -50,9 +50,6 @@ namespace LiveSplit.EMUHELP.PS1
             Debugs.Info($"  => WRAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        public override bool KeepAlive()
-        {
-            return Helper.game.ReadBytes(core_base_address, 1, out _);
-        }
+        internal override bool KeepAlive() => Helper.Game.ReadBytes(core_base_address, 1, out _);
     }
 }

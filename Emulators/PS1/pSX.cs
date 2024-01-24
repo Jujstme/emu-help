@@ -5,17 +5,17 @@ namespace LiveSplit.EMUHELP.PS1
 {
     internal class pSX : PS1Base
     {
-        public pSX(HelperBase helper) : base(helper)
+        internal pSX(HelperBase helper) : base(helper)
         {
-            var game = Helper.game;
+            var game = Helper.Game;
             var scanner = game.SigScanner();
 
             SigScanTarget[] scan =
             {
-                new SigScanTarget(2, "8B 15 ?? ?? ?? ?? 8D 34 1A") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
-                new SigScanTarget(1, "A1 ?? ?? ?? ?? 8D 34 18") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
-                new SigScanTarget(1, "A1 ?? ?? ?? ?? 8B 7C 24 14") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
-                new SigScanTarget(1, "A1 ?? ?? ?? ?? 8B 6C 24") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                new(2, "8B 15 ?? ?? ?? ?? 8D 34 1A") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                new(1, "A1 ?? ?? ?? ?? 8D 34 18") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                new(1, "A1 ?? ?? ?? ?? 8B 7C 24 14") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
+                new(1, "A1 ?? ?? ?? ?? 8B 6C 24") { OnFound = (p, s, addr) => p.ReadPointer(addr) },
             };
 
             var ptr = IntPtr.Zero;
@@ -37,9 +37,6 @@ namespace LiveSplit.EMUHELP.PS1
             Debugs.Info($"  => WRAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        public override bool KeepAlive()
-        {
-            return true;
-        }
+        internal override bool KeepAlive() => true;
     }
 }

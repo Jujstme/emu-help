@@ -24,7 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <LangVersion>11.0</LangVersion>
     <Prefer32Bit>false</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>lib\</OutputPath>
@@ -36,6 +36,9 @@
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <DebugSymbols>false</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LiveSplit.Core">
@@ -57,10 +60,10 @@
     <Compile Include="AutoSplitterScript\timer.cs" />
     <Compile Include="Common\DebugSymbols.cs" />
     <Compile Include="Common\EmuBase.cs" />
-    <Compile Include="Common\HelperBase\Init.cs" />
-    <Compile Include="Common\HelperBase\Make.cs" />
-    <Compile Include="Common\HelperBase\Memory.cs" />
-    <Compile Include="Common\HelperBase\Process.cs" />
+    <Compile Include="HelperBase\Init.cs" />
+    <Compile Include="HelperBase\Make.cs" />
+    <Compile Include="HelperBase\Memory.cs" />
+    <Compile Include="HelperBase\Process.cs" />
     <Compile Include="Emulators\GBA\Base.cs" />
     <Compile Include="Emulators\GBA\EmuHawk.cs" />
     <Compile Include="Emulators\GBA\Mednafen.cs" />

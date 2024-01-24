@@ -9,24 +9,24 @@ namespace LiveSplit.EMUHELP.GBA
         const int ewram_offset = 0x938C + 0x8;
         const int iwram_offset = 0x95D4;
 
-        public NoCashGBA(HelperBase helper) : base(helper)
+        internal NoCashGBA(HelperBase helper) : base(helper)
         {
-            base_addr = Helper.game.SafeSigScanOrThrow(new SigScanTarget(2, "FF 35 ?? ?? ?? ?? 55") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
-            IntPtr addr = Helper.game.ReadPointer(base_addr);
-            ewram = Helper.game.ReadPointer(addr + ewram_offset);
-            iwram = Helper.game.ReadPointer(addr + iwram_offset);
+            base_addr = Helper.Game.SafeSigScanOrThrow(new SigScanTarget(2, "FF 35 ?? ?? ?? ?? 55") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+            IntPtr addr = Helper.Game.ReadPointer(base_addr);
+            ewram = Helper.Game.ReadPointer(addr + ewram_offset);
+            iwram = Helper.Game.ReadPointer(addr + iwram_offset);
 
             Debugs.Info("  => Hooked to emulator: NO$GBA");
             Debugs.Info($"  => EWRAM address found at 0x{ewram.ToString("X")}");
             Debugs.Info($"  => IWRAM address found at 0x{iwram.ToString("X")}");
         }
 
-        public override bool KeepAlive()
+        internal override bool KeepAlive()
         {
-            if (Helper.game.ReadPointer(base_addr, out var addr))
+            if (Helper.Game.ReadPointer(base_addr, out var addr))
             {
-                ewram = Helper.game.ReadPointer(addr + ewram_offset);
-                iwram = Helper.game.ReadPointer(addr + iwram_offset);
+                ewram = Helper.Game.ReadPointer(addr + ewram_offset);
+                iwram = Helper.Game.ReadPointer(addr + iwram_offset);
                 return true;
             }
             else

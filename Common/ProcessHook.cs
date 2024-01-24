@@ -42,14 +42,8 @@ namespace LiveSplit.EMUHELP
             {
                 foreach (var entry in processNames)
                 {
-                    try
-                    {
-                        Game = Process.GetProcessesByName(entry).OrderByDescending(p => p.StartTime).FirstOrDefault(p => !p.HasExited);
-                    }
-                    catch
-                    {
-                        break;
-                    }
+                    try { Game = Process.GetProcessesByName(entry).OrderByDescending(p => p.StartTime).FirstOrDefault(p => !p.HasExited); }
+                    catch { break; }
 
                     if (Game != null)
                     {

@@ -7,11 +7,8 @@ public class Playstation : PS1 { }
 
 public class Playstation1 : PS1 { }
 
-public partial class PS1 : HelperBase
+public class PS1 : HelperBase
 {
-    private PS1Base emu;
-    private IntPtr emu_base => emu.ram_base;
-
     public PS1(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
@@ -35,7 +32,7 @@ public partial class PS1 : HelperBase
 
     protected override void InitActions()
     {
-        emu = game.ProcessName.ToLower() switch {
+        Emu = Game.ProcessName.ToLower() switch {
             "epsxe" => new ePSXe(this),
             "duckstation-qt-x64-releaseltcg" or "duckstation-nogui-x64-releaseltcg" => new Duckstation(this),
             "psxfin" => new pSX(this),
@@ -45,16 +42,13 @@ public partial class PS1 : HelperBase
             "mednafen" => new Mednafen(this),
             _ => throw new NotImplementedException(),
         };
-
-        KeepAlive = emu.KeepAlive;
-        MakeWatchers();
     }
 
     public override bool TryGetAddress(ulong address, out IntPtr realAddress)
     {
         realAddress = default;
 
-        if (emu_base == null)
+        if (Emu.GetMemoryAddress(0) == null)
             return false;
 
         var defOffset = address;
@@ -64,17 +58,11 @@ public partial class PS1 : HelperBase
         else
             return false;
 
-        realAddress = (IntPtr)((ulong)emu_base + defOffset);
+        realAddress = (IntPtr)((ulong)Emu.GetMemoryAddress(0) + defOffset);
         return true;
     }
 
-    internal override bool IsAddressInBounds<T>(ulong address)
-    {
-        return address + (ulong)Marshal.SizeOf(typeof(T)) <= 0x200000;
-    }
+    internal override bool IsAddressInBounds<T>(ulong address) => address + (ulong)Marshal.SizeOf(typeof(T)) <= 0x200000;
 
-    internal override bool IsStringAddressInBounds(ulong address, int stringLength)
-    {
-        return address + (ulong)stringLength <= 0x200000;
-    }
+    internal override bool IsStringAddressInBounds(ulong address, int stringLength) => address + (ulong)stringLength <= 0x200000;
 }

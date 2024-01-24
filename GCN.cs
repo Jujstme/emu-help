@@ -7,12 +7,8 @@ public class Gamecube : GCN { }
 
 public class GameCube : GCN { }
 
-public partial class GCN : HelperBase
+public class GCN : HelperBase
 {
-    private GCNBase emu;
-    internal override Endianness.Endian Endian => emu.Endian;
-
-
     public GCN(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
@@ -30,15 +26,12 @@ public partial class GCN : HelperBase
 
     protected override void InitActions()
     {
-        emu = game.ProcessName switch
+        Emu = Game.ProcessName switch
         {
             "Dolphin" => new Dolphin(this),
             "retroarch" => new Retroarch(this),
             _ => throw new NotImplementedException(),
         };
-
-        KeepAlive = emu.KeepAlive;
-        MakeWatchers();
     }
 
     internal override bool IsAddressInBounds<T>(ulong address)
@@ -55,7 +48,7 @@ public partial class GCN : HelperBase
     {
         realAddress = default;
 
-        if (emu == null || emu.MEM1 == null)
+        if (Emu == null || Emu.GetMemoryAddress(0) == null)
             return false;
 
         ulong defOffset;
@@ -65,7 +58,7 @@ public partial class GCN : HelperBase
         else
             return false;
 
-        realAddress = (IntPtr)((ulong)emu.MEM1 + defOffset);
+        realAddress = (IntPtr)((ulong)Emu.GetMemoryAddress(0) + defOffset);
         return true;
     }
 }

@@ -9,9 +9,9 @@ namespace LiveSplit.EMUHELP.PS2
         private readonly bool is64Bit;
         private readonly IntPtr core_base_address;
 
-        public Retroarch(HelperBase helper) : base(helper)
+        internal Retroarch(HelperBase helper) : base(helper)
         {
-            is64Bit = Helper.game.Is64Bit();
+            is64Bit = Helper.Game.Is64Bit();
 
             if (!is64Bit)
                 throw new Exception();
@@ -20,10 +20,10 @@ namespace LiveSplit.EMUHELP.PS2
             {
                 "pcsx2_libretro.dll",
             };
-            ProcessModuleWow64Safe currentCore = Helper.game.ModulesWow64Safe().First(m => supportedCores.Any(e => e == m.ModuleName));
+            ProcessModuleWow64Safe currentCore = Helper.Game.ModulesWow64Safe().First(m => supportedCores.Any(e => e == m.ModuleName));
             core_base_address = currentCore.BaseAddress;
 
-            SignatureScanner scanner = new(Helper.game, core_base_address, currentCore.ModuleMemorySize);
+            SignatureScanner scanner = new(Helper.Game, core_base_address, currentCore.ModuleMemorySize);
 
             ram_base = scanner.ScanOrThrow(new SigScanTarget(3, "48 8B ?? ?? ?? ?? ?? 81 ?? F0 3F 00 00") { OnFound = (p, s, addr) => p.ReadPointer(addr + 0x4 + p.ReadValue<int>(addr)) });
             ram_base.ThrowIfZero();
@@ -32,9 +32,6 @@ namespace LiveSplit.EMUHELP.PS2
             Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        public override bool KeepAlive()
-        {
-            return Helper.game.ReadBytes(core_base_address, 1, out _);
-        }
+        internal override bool KeepAlive() => Helper.Game.ReadBytes(core_base_address, 1, out _);
     }
 }

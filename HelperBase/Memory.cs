@@ -49,10 +49,10 @@ public abstract partial class HelperBase
                 return false;
         }
 
-        if (!game.ReadValue<T>(realAddress, out value))
+        if (!Game.ReadValue<T>(realAddress, out value))
             return false;
 
-        value = value.FromEndian(Endian);
+        value = value.FromEndian(Emu.Endian);
         return true;
     }
 
@@ -81,7 +81,7 @@ public abstract partial class HelperBase
                 return false;
         }
 
-        return game.ReadString(realAddress, length, out value);
+        return Game.ReadString(realAddress, length, out value);
     }
 
     public string ReadString(ulong address, int length, params uint[] offsets) => TryReadString(address, length, out string value) ? value : default;

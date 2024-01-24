@@ -5,14 +5,8 @@ using LiveSplit.EMUHELP.WII;
 
 public class Wii : WII { }
 
-public partial class WII : HelperBase
+public class WII : HelperBase
 {
-    private WIIBase emu;
-    private IntPtr MEM1 => emu.MEM1;
-    private IntPtr MEM2 => emu.MEM2;
-    internal override Endianness.Endian Endian => emu.Endian;
-
-
     public WII(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
@@ -30,15 +24,12 @@ public partial class WII : HelperBase
 
     protected override void InitActions()
     {
-        emu = game.ProcessName switch
+        Emu = Game.ProcessName switch
         {
             "Dolphin" => new Dolphin(this),
             "retroarch" => new Retroarch(this),
             _ => throw new NotImplementedException(),
         };
-
-        KeepAlive = emu.KeepAlive;
-        MakeWatchers();
     }
 
     internal override bool IsAddressInBounds<T>(ulong address)
@@ -65,13 +56,13 @@ public partial class WII : HelperBase
     {
         realAddress = default;
 
-        if (MEM1 == null || MEM2 == null)
+        if (Emu.GetMemoryAddress(0) == null || Emu.GetMemoryAddress(1) == null)
             return false;
 
         if (address >= 0x80000000 && address <= 0x817FFFFF)
-            realAddress = (IntPtr)((ulong)MEM1 + address - 0x80000000);
+            realAddress = (IntPtr)((ulong)Emu.GetMemoryAddress(0) + address - 0x80000000);
         else if (address >= 0x90000000 && address <= 0x93FFFFFF)
-            realAddress = (IntPtr)((ulong)MEM2 + address - 0x90000000);
+            realAddress = (IntPtr)((ulong)Emu.GetMemoryAddress(1) + address - 0x90000000);
 
         return realAddress != default;
     }

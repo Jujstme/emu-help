@@ -8,14 +8,14 @@ namespace LiveSplit.EMUHELP.PS1
     {
         private readonly IntPtr base_addr;
 
-        public Duckstation(HelperBase helper) : base(helper)
+        internal Duckstation(HelperBase helper) : base(helper)
         {
-            var game = Helper.game;
+            var game = Helper.Game;
 
             if (!game.Is64Bit())
                 throw new Exception();
 
-            base_addr = game.MainModuleWow64Safe().GetSymbols(game).FirstOrDefault(s => s.Name == "RAM").Address;
+            base_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "RAM").Address;
 
             if (base_addr.IsZero())
                 base_addr = game.SafeSigScanOrThrow(new SigScanTarget(3, "48 89 0D ???????? B8") { OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr) });
@@ -28,9 +28,9 @@ namespace LiveSplit.EMUHELP.PS1
                 Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        public override bool KeepAlive()
+        internal override bool KeepAlive()
         {
-            var success = Helper.game.ReadPointer(base_addr, out var addr);
+            var success = Helper.Game.ReadPointer(base_addr, out var addr);
 
             if (success)
             {

@@ -9,10 +9,6 @@ public class Megadrive : Genesis { }
 
 public partial class Genesis : HelperBase
 {
-    private GenesisBase emu { get; set; }
-    private IntPtr ram_base => emu.ram_base;
-    internal override Endianness.Endian Endian => emu.Endian;
-
     public Genesis(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
@@ -34,7 +30,7 @@ public partial class Genesis : HelperBase
 
     protected override void InitActions()
     {
-        emu = game.ProcessName switch
+        Emu = Game.ProcessName switch
         {
             "retroarch" => new Retroarch(this),
             "SEGAGameRoom" or "SEGAGenesisClassics" => new SegaClassics(this),
@@ -43,9 +39,6 @@ public partial class Genesis : HelperBase
             "blastem" => new BlastEm(this),
             _ => throw new NotImplementedException(),
         };
-
-        KeepAlive = emu.KeepAlive;
-        MakeWatchers();
     }
 
     internal override bool IsAddressInBounds<T>(ulong address)
@@ -76,7 +69,7 @@ public partial class Genesis : HelperBase
     {
         realAddress = default;
      
-        if (ram_base == null)
+        if (Emu.GetMemoryAddress(0) == null)
             return false;
 
         var defOffset = address;
@@ -86,7 +79,7 @@ public partial class Genesis : HelperBase
         else if (defOffset >= 0xFF0000 && defOffset <= 0xFFFFFF)
             defOffset -= 0xFF0000;
 
-        realAddress = (IntPtr)((ulong)ram_base + defOffset);
+        realAddress = (IntPtr)((ulong)Emu.GetMemoryAddress(0) + defOffset);
         return true;
     }
 
@@ -94,7 +87,7 @@ public partial class Genesis : HelperBase
     {
         value = default;
 
-        if (ram_base == null || !IsAddressInBounds<T>(address))
+        if (Emu.GetMemoryAddress(0) == null || !IsAddressInBounds<T>(address))
             return false;
 
         var alignedOffset = (int)address & ~1;
@@ -108,9 +101,9 @@ public partial class Genesis : HelperBase
         if ((f_size & 1) != 0)
             f_size++;
 
-        if (game.ReadBytes(realAddress, f_size, out var buf))
+        if (Game.ReadBytes(realAddress, f_size, out var buf))
         {
-            if (this.Endian == Endianness.Endian.Little)
+            if (Emu.Endian == Endianness.Endian.Little)
             {
                 for (int i = 0; i < buf.Length; i += 2)
                     (buf[i + 1], buf[i]) = (buf[i], buf[i + 1]);
@@ -118,7 +111,7 @@ public partial class Genesis : HelperBase
 
             if (buf.TryConvertTo<T>(misalignment, out T tempValue))
             {
-                value = tempValue.FromEndian(Endian);
+                value = tempValue.FromEndian(Emu.Endian);
                 return true;
             }
 
@@ -131,7 +124,7 @@ public partial class Genesis : HelperBase
     {
         value = default;
 
-        if (ram_base == null || !IsStringAddressInBounds(address, length))
+        if (Emu.GetMemoryAddress(0) == null || !IsStringAddressInBounds(address, length))
             return false;
 
         var alignedOffset = (int)address & ~1;
@@ -144,9 +137,9 @@ public partial class Genesis : HelperBase
         if ((f_size & 1) != 0)
             f_size++;
 
-        if (game.ReadBytes(realAddress, f_size, out var buf))
+        if (Game.ReadBytes(realAddress, f_size, out var buf))
         {
-            if (this.Endian == Endianness.Endian.Little)
+            if (Emu.Endian == Endianness.Endian.Little)
             {
                 for (int i = 0; i < buf.Length; i += 2)
                     (buf[i + 1], buf[i]) = (buf[i], buf[i + 1]);

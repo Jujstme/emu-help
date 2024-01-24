@@ -5,9 +5,9 @@ namespace LiveSplit.EMUHELP.GBA
 {
     internal class mGBA : GBABase
     {
-        public mGBA(HelperBase helper) : base(helper)
+        internal mGBA(HelperBase helper) : base(helper)
         {
-            ewram = Helper.game
+            ewram = Helper.Game
                 .MemoryPages(true)
                 .First(p => (int)p.RegionSize == 0x48000 && (p.AllocationProtect & MemPageProtect.PAGE_READWRITE) != 0)
                 .BaseAddress;
@@ -19,9 +19,9 @@ namespace LiveSplit.EMUHELP.GBA
             Debugs.Info($"  => IWRAM address found at 0x{iwram.ToString("X")}");
         }
 
-        public override bool KeepAlive()
+        internal override bool KeepAlive()
         {
-            return Helper.game.ReadBytes(ewram, 1, out _);
+            return Helper.Game.ReadBytes(ewram, 1, out _);
         }
     }
 }

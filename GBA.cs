@@ -7,10 +7,8 @@ public class GameBoyAdvance : GBA { }
 public class GameboyAdvance : GBA { }
 public class Gameboyadvance : GBA { }
 
-public partial class GBA : HelperBase
+public class GBA : HelperBase
 {
-    private GBABase emu { get; set; }
-
     public GBA(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
@@ -33,7 +31,7 @@ public partial class GBA : HelperBase
 
     protected override void InitActions()
     {
-        emu = game.ProcessName switch
+        Emu = Game.ProcessName switch
         {
             "visualboyadvance-m" or "VisualBoyAdvance" => new VisualBoyAdvance(this),
             "mGBA" => new mGBA(this),
@@ -43,9 +41,6 @@ public partial class GBA : HelperBase
             "mednafen" => new Mednafen(this),
             _ => throw new NotImplementedException(),
         };
-
-        KeepAlive = emu.KeepAlive;
-        MakeWatchers();
     }
 
     internal override bool IsAddressInBounds<T>(ulong address)
@@ -72,8 +67,8 @@ public partial class GBA : HelperBase
     {
         realAddress = (address >> 24) switch
         {
-            2 => emu.ewram != null && address < 0x02040000 ? (IntPtr)((ulong)emu.ewram + (address - 0x02000000)) : default,
-            3 => emu.iwram != null && address < 0x03008000 ? (IntPtr)((ulong)emu.iwram + (address - 0x03008000)) : default,
+            2 => Emu.GetMemoryAddress(0) != null && address < 0x02040000 ? (IntPtr)((ulong)Emu.GetMemoryAddress(0) + (address - 0x02000000)) : default,
+            3 => Emu.GetMemoryAddress(1) != null && address < 0x03008000 ? (IntPtr)((ulong)Emu.GetMemoryAddress(1) + (address - 0x03008000)) : default,
             _ => default,
         };
 

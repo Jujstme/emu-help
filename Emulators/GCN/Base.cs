@@ -4,10 +4,14 @@ namespace LiveSplit.EMUHELP.GCN
 {
     internal abstract class GCNBase : EmuBase
     {
-        public IntPtr MEM1 { get; protected set; } = default;
-        public Endianness.Endian Endian { get; protected set; } = Endianness.Endian.Big;
+        internal IntPtr MEM1 { get; set; } = default;
 
         internal GCNBase(HelperBase helper)
-            : base(helper) { }
+            : base(helper)
+        {
+            Endian = Endianness.Endian.Big;
+        }
+
+        internal override IntPtr GetMemoryAddress(int region) => MEM1;
     }
 }

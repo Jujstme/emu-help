@@ -7,10 +7,10 @@ namespace LiveSplit.EMUHELP.SMS
     {
         private readonly IntPtr base_addr;
 
-        public Fusion(HelperBase helper) : base(helper)
+        internal Fusion(HelperBase helper) : base(helper)
         {
-            base_addr = Helper.game.SafeSigScanOrThrow(new SigScanTarget(4, "74 C8 83 3D") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
-            ram_base = Helper.game.ReadPointer(base_addr);
+            base_addr = Helper.Game.SafeSigScanOrThrow(new SigScanTarget(4, "74 C8 83 3D") { OnFound = (p, s, addr) => p.ReadPointer(addr) });
+            ram_base = Helper.Game.ReadPointer(base_addr);
             ram_base.ThrowIfZero();
             ram_base += 0xC000;
 
@@ -18,9 +18,9 @@ namespace LiveSplit.EMUHELP.SMS
             Debugs.Info($"  => RAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        public override bool KeepAlive()
+        internal override bool KeepAlive()
         {
-            if (Helper.game.ReadPointer(base_addr, out var addr))
+            if (Helper.Game.ReadPointer(base_addr, out var addr))
             {
                 ram_base = addr;
                 return true;

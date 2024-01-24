@@ -4,7 +4,7 @@ using LiveSplit.EMUHELP;
 
 public abstract partial class HelperBase
 {
-    private bool isASLCodeGenerating { get; set; }
+    private readonly bool isASLCodeGenerating;
 
     /// <summary>
     /// Creates a new instance of the Helper class with code generation.
@@ -20,10 +20,9 @@ public abstract partial class HelperBase
     /// <param name="generateCode"></param>
     public HelperBase(bool generateCode)
     {
-        //Manager = this;
         isASLCodeGenerating = generateCode;
 
-        if (generateCode)
+        if (isASLCodeGenerating)
         {
             if (Actions.Current != "startup")
             {

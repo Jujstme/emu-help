@@ -9,9 +9,6 @@ public class GameGear : SMS { }
 
 public partial class SMS : HelperBase
 {
-    private SMSBase emu { get; set; }
-    private IntPtr ram_base => emu.ram_base;
-
     public SMS(bool generateCode) : base(generateCode)
     {
         var ProcessNames = new string[]
@@ -31,7 +28,7 @@ public partial class SMS : HelperBase
 
     protected override void InitActions()
     {
-        emu = game.ProcessName.ToLower() switch
+        Emu = Game.ProcessName.ToLower() switch
         {
             "retroarch" => new Retroarch(this),
             "fusion" => new Fusion(this),
@@ -39,9 +36,6 @@ public partial class SMS : HelperBase
             "mednafen" => new Mednafen(this),
             _ => throw new NotImplementedException(),
         };
-
-        KeepAlive = emu.KeepAlive;
-        MakeWatchers();
     }
 
     internal override bool IsAddressInBounds<T>(ulong address)
@@ -76,7 +70,7 @@ public partial class SMS : HelperBase
     {
         realAddress = default;
         
-        if (ram_base == null)
+        if (Emu.GetMemoryAddress(0) == null)
             return false;
 
         var addr = address;
@@ -87,7 +81,7 @@ public partial class SMS : HelperBase
         else
             return false;
 
-        realAddress = (IntPtr)((ulong)ram_base + addr);
+        realAddress = (IntPtr)((ulong)Emu.GetMemoryAddress(0) + addr);
         return true;
     }
 }

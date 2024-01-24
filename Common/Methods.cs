@@ -139,7 +139,7 @@ namespace LiveSplit.EMUHELP
         /// <param name="module">A ProcessModuleWow64Safe with a valid PE header</param>
         /// <param name="process">The parent Process of the specified module</param>
         /// <returns></returns>
-        public static IEnumerable<Symbol> GetSymbols(this ProcessModuleWow64Safe module, Process process)
+        public static IEnumerable<Symbol> GetSymbols(this Process process, ProcessModuleWow64Safe module)
         {
             IntPtr baseAddress = module.BaseAddress;
             bool is64Bit = process.Is64Bit();
@@ -167,7 +167,7 @@ namespace LiveSplit.EMUHELP
         {
             process.Refresh();
             var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-            //process.SetFieldValue<Dictionary<int, ProcessModuleWow64Safe[]>>("ModuleCache", new(), bindingFlags);
+            //typeof(ExtensionMethods).GetField("ModuleCache", bindingFlags).GetMethod("Clear", bindingFlags).Invoke(null, null);
             typeof(ExtensionMethods).GetField("ModuleCache", bindingFlags).SetValue(null, new Dictionary<int, ProcessModuleWow64Safe[]>());
         }
 
@@ -180,7 +180,7 @@ namespace LiveSplit.EMUHELP
         /// <returns>True if successful, false otherwise.</returns>
         public static bool TryConvertTo<T>(this byte[] obj, int offset, out T value) where T: unmanaged
         {
-            value = default(T);
+            value = default;
             if (offset + Marshal.SizeOf<T>() > obj.Length)
                 return false;
             GCHandle handle = GCHandle.Alloc(obj, GCHandleType.Pinned);
@@ -201,7 +201,7 @@ namespace LiveSplit.EMUHELP
             return TryConvertTo<T>(obj, offset, out T value) switch
             {
                 true => value,
-                false => default(T),
+                false => default,
             };
         }
     }

@@ -5,16 +5,16 @@ namespace LiveSplit.EMUHELP.WII
 {
     internal class Dolphin : WIIBase
     {
-        public Dolphin(HelperBase helper) : base(helper)
+        internal Dolphin(HelperBase helper) : base(helper)
         {
             Endian = Endianness.Endian.Big;
 
-            MEM1 = Helper.game.MemoryPages(true)
+            MEM1 = Helper.Game.MemoryPages(true)
                 .First(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x2000000
-                    && Helper.game.ReadValue<long>(p.BaseAddress + 0x3118) == 0x0000000400000004)
+                    && Helper.Game.ReadValue<long>(p.BaseAddress + 0x3118) == 0x0000000400000004)
                 .BaseAddress;
 
-            MEM2 = Helper.game.MemoryPages(true)
+            MEM2 = Helper.Game.MemoryPages(true)
                 .First(p => p.Type == MemPageType.MEM_MAPPED && (int)p.RegionSize == 0x4000000
                     && (long)p.BaseAddress > (long)MEM1 && (long)p.BaseAddress < (long)MEM1 + 0x10000000)
                 .BaseAddress;
@@ -27,9 +27,6 @@ namespace LiveSplit.EMUHELP.WII
                 Debugs.Info($"  => MEM2 address found at 0x{MEM2.ToString("X")}");
         }
 
-        public override bool KeepAlive()
-        {
-            return Helper.game.ReadBytes(MEM1, 1, out _) && Helper.game.ReadBytes(MEM2, 1, out _);
-        }
+        internal override bool KeepAlive() => Helper.Game.ReadBytes(MEM1, 1, out _) && Helper.Game.ReadBytes(MEM2, 1, out _);
     }
 }

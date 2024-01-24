@@ -5,9 +5,9 @@ namespace LiveSplit.EMUHELP.PS1
 {
     internal class Mednafen : PS1Base
     {
-        public Mednafen(HelperBase helper) : base(helper)
+        internal Mednafen(HelperBase helper) : base(helper)
         {
-            ram_base = Helper.game.SafeSigScanOrThrow(Helper.game.Is64Bit()
+            ram_base = Helper.Game.SafeSigScanOrThrow(Helper.Game.Is64Bit()
                 ? new SigScanTarget(5, "89 01 0F B6 82") { OnFound = (p, s, addr) => (IntPtr)p.ReadValue<int>(addr) }
                 : new SigScanTarget(5, "89 01 0F B6 82 ?? ?? ?? ?? C3") { OnFound = (p, s, addr) => (IntPtr)p.ReadValue<int>(addr) });
 
@@ -15,7 +15,7 @@ namespace LiveSplit.EMUHELP.PS1
             Debugs.Info($"  => WRAM address found at 0x{ram_base.ToString("X")}");
         }
 
-        public override bool KeepAlive()
+        internal override bool KeepAlive()
         {
             return true;
         }
