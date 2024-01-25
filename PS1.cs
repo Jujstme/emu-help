@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using LiveSplit.EMUHELP;
 using LiveSplit.EMUHELP.PS1;
@@ -11,7 +12,7 @@ public class PS1 : HelperBase
 {
     public PS1(bool generateCode) : base(generateCode)
     {
-        var ProcessNames = new string[]
+        List<string> processNames = new List<string>
         {
             "ePSXe",
             "psxfin",
@@ -23,7 +24,7 @@ public class PS1 : HelperBase
             "mednafen"
         };
 
-        GameProcess = new ProcessHook(ProcessNames);
+        GameProcess = new ProcessHook(processNames);
         Debugs.Info("  => PS1 Helper started");
     }
 

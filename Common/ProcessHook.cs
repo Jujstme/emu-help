@@ -3,6 +3,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace LiveSplit.EMUHELP
 {
@@ -28,9 +29,25 @@ namespace LiveSplit.EMUHELP
         /// </summary>
         public GameInitStatus InitStatus { get; set; }
 
-        public ProcessHook(params string[] exeNames)
+        public ProcessHook(string exeName)
+        {
+            processNames = new string[] { exeName };
+            InitStatus = GameInitStatus.NotStarted;
+            CancelToken = new CancellationTokenSource();
+            Task.Run(TryConnect, CancelToken.Token);
+        }
+
+        public ProcessHook(string[] exeNames)
         {
             processNames = exeNames;
+            InitStatus = GameInitStatus.NotStarted;
+            CancelToken = new CancellationTokenSource();
+            Task.Run(TryConnect, CancelToken.Token);
+        }
+
+        public ProcessHook(List<string> exeNames)
+        {
+            processNames = exeNames.ToArray();
             InitStatus = GameInitStatus.NotStarted;
             CancelToken = new CancellationTokenSource();
             Task.Run(TryConnect, CancelToken.Token);
