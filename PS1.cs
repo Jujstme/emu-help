@@ -63,7 +63,7 @@ public class PS1 : HelperBase
         return true;
     }
 
-    internal override bool IsAddressInBounds<T>(ulong address) => address + (ulong)Marshal.SizeOf(typeof(T)) <= 0x200000;
+    internal override bool IsAddressInBounds<T>(ulong address) => address + (ulong)Marshal.SizeOf(typeof(T)) <= 0x80200000;
 
-    internal override bool IsStringAddressInBounds(ulong address, int stringLength) => address + (ulong)stringLength <= 0x200000;
+    internal override bool IsStringAddressInBounds(ulong address, int stringLength) => address + (ulong)stringLength <= 0x80200000;
 }
