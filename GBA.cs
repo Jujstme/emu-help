@@ -20,6 +20,7 @@ public class GBA : HelperBase
             "retroarch",
             "EmuHawk",
             "mednafen",
+            "GSR",
         };
 
         GameProcess = new ProcessHook(ProcessNames);
@@ -39,6 +40,7 @@ public class GBA : HelperBase
             "retroarch" => new Retroarch(this),
             "EmuHawk" => new EmuHawk(this),
             "mednafen" => new Mednafen(this),
+            "GSR" => new GSR(this),
             _ => throw new NotImplementedException(),
         };
     }
@@ -68,7 +70,7 @@ public class GBA : HelperBase
         realAddress = (address >> 24) switch
         {
             2 => Emu.GetMemoryAddress(0) != null && address < 0x02040000 ? (IntPtr)((ulong)Emu.GetMemoryAddress(0) + (address - 0x02000000)) : default,
-            3 => Emu.GetMemoryAddress(1) != null && address < 0x03008000 ? (IntPtr)((ulong)Emu.GetMemoryAddress(1) + (address - 0x03008000)) : default,
+            3 => Emu.GetMemoryAddress(1) != null && address < 0x03008000 ? (IntPtr)((ulong)Emu.GetMemoryAddress(1) + (address - 0x03000000)) : default,
             _ => default,
         };
 
