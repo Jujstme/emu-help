@@ -36,7 +36,8 @@ namespace LiveSplit.EMUHELP.GBA
                 iwram = Helper.Game.ReadPointer(iwram_pointer);
                 ewram = ewram_addr;
                 return true;
-            } else
+            }
+            else
                 return false;
         }
     }
