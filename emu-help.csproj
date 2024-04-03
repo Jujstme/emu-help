@@ -60,6 +60,8 @@
     <Compile Include="AutoSplitterScript\timer.cs" />
     <Compile Include="Common\DebugSymbols.cs" />
     <Compile Include="Common\EmuBase.cs" />
+    <Compile Include="Emulators\GBA\GSR.cs" />
+    <Compile Include="Emulators\GBC\GSR_qt.cs" />
     <Compile Include="HelperBase\Init.cs" />
     <Compile Include="HelperBase\Make.cs" />
     <Compile Include="HelperBase\Memory.cs" />
@@ -71,6 +73,8 @@
     <Compile Include="Emulators\GBA\NoCashGBA.cs" />
     <Compile Include="Emulators\GBA\Retroarch.cs" />
     <Compile Include="Emulators\GBA\VisualBoyAdvance.cs" />
+    <Compile Include="Emulators\GBC\Base.cs" />
+    <Compile Include="Emulators\GBC\GSR.cs" />
     <Compile Include="Emulators\GCN\Base.cs" />
     <Compile Include="Emulators\GCN\Dolphin.cs" />
     <Compile Include="Emulators\GCN\Retroarch.cs" />
@@ -108,6 +112,7 @@
     <Compile Include="SMS.cs" />
     <Compile Include="Genesis.cs" />
     <Compile Include="GBA.cs" />
+    <Compile Include="GBC.cs" />
     <Compile Include="GCN.cs" />
     <Compile Include="PS2.cs" />
     <Compile Include="PS1.cs" />
@@ -124,7 +129,7 @@
   <PropertyGroup>
     <PreBuildEvent>del "emu-help-v2"</PreBuildEvent>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
