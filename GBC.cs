@@ -36,12 +36,12 @@ public class GBC : HelperBase
 
     internal override bool IsAddressInBounds<T>(ulong address)
     {
-        return address + (ulong)Marshal.SizeOf<T>() <= 0xffff;
+        return address + (ulong)Marshal.SizeOf<T>() <= 0x10000;
     }
 
     internal override bool IsStringAddressInBounds(ulong address, int stringLength)
     {
-        return address + (ulong)stringLength <= 0xffff;
+        return address + (ulong)stringLength <= 0x10000;
     }
 
     public override bool TryGetAddress(ulong address, out IntPtr realAddress)
@@ -52,9 +52,9 @@ public class GBC : HelperBase
             return false;
 
         int region = 0;
-        if (address >= 0xFF00 && address <= 0xFFFE)
+        if (address >= 0xFF00 && address <= 0xFFFF)
         {
-            address = address - 0xff00;
+            address = address - 0xFF00;
             region = 1;
         }
 

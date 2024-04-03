@@ -32,22 +32,20 @@ namespace LiveSplit.EMUHELP.GBC
                 Debugs.Info($"  => WRAM address found at 0x{wram_base.ToString("X")}");
                 Debugs.Info($"  => IO_HRAM address found at 0x{iohram_base.ToString("X")}");
             }
-
-
         }
 
         internal override bool KeepAlive()
         {
-            var success = Helper.Game.ReadPointer(base_wram_addr, out var wram_addr);
-
-            if (success)
+            if (Helper.Game.ReadPointer(base_wram_addr, out var _wram_base) && Helper.Game.ReadPointer(base_iohram_addr, out var _iohram_base))
             {
-                iohram_base = Helper.Game.ReadPointer(base_iohram_addr) - 0x80;
-                wram_base = wram_addr;
+                wram_base = _wram_base;
+                iohram_base = _iohram_base - 0x80;
                 return true;
             }
             else
+            {
                 return false;
+            }
         }
     }
 }

@@ -15,10 +15,8 @@ namespace LiveSplit.EMUHELP.GBA
             iwram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSR_GBA_IWRAM_PTR").Address;
 
             if (ewram_pointer.IsZero() || iwram_pointer.IsZero())
-            {
-                Debugs.Info("  => Pointers are 0.");
                 throw new Exception();
-            }
+
             ewram = game.ReadPointer(ewram_pointer);
             iwram = game.ReadPointer(iwram_pointer);
 
@@ -29,16 +27,16 @@ namespace LiveSplit.EMUHELP.GBA
 
         internal override bool KeepAlive()
         {
-            var success = Helper.Game.ReadPointer(ewram_pointer, out var ewram_addr);
-
-            if (success)
+            if (Helper.Game.ReadPointer(ewram_pointer, out var ewram_addr) && Helper.Game.ReadPointer(iwram_pointer, out var iwram_addr))
             {
-                iwram = Helper.Game.ReadPointer(iwram_pointer);
                 ewram = ewram_addr;
+                iwram = iwram_addr;
                 return true;
             }
             else
+            {
                 return false;
+            }
         }
     }
 }

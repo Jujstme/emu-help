@@ -16,7 +16,6 @@ namespace LiveSplit.EMUHELP.GBC
         {
             return region switch
             {
-                0 => wram_base,
                 1 => iohram_base,
                 _ => wram_base
             };
