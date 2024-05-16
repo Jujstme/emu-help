@@ -46,13 +46,9 @@ namespace LiveSplit.EMUHELP.GBC
             var success = Helper.Game.ReadPointer(base_addr - 0x10, out var addr);
 
             if (success)
-            {
                 wram_base = addr;
-                iohram_base = base_addr + 0x13FC;
-                return true;
-            }
-            else
-                return false;
+
+            return success;
         }
     }
 }
