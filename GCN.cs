@@ -53,7 +53,7 @@ public class GCN : HelperBase
 
         ulong defOffset;
 
-        if (address >= 0x80000000 && address < 0x80200000)
+        if (address >= 0x80000000 && address <= 0x81FFFFFF)
             defOffset = address - 0x80000000;
         else
             return false;
