@@ -20,6 +20,7 @@ public class GBA : HelperBase
             "retroarch",
             "EmuHawk",
             "mednafen",
+            "GSR",
             "GSE",
         };
 
@@ -40,7 +41,7 @@ public class GBA : HelperBase
             "retroarch" => new Retroarch(this),
             "EmuHawk" => new EmuHawk(this),
             "mednafen" => new Mednafen(this),
-            "GSE" => new GSE(this),
+            "GSR" or "GSE" => new GSE(this),
             _ => throw new NotImplementedException(),
         };
     }

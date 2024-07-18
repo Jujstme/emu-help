@@ -13,6 +13,7 @@ public class GBC : HelperBase
     {
         var ProcessNames = new string[]
         {
+            "GSR",
             "GSE",
             "gambatte_speedrun"
         };
@@ -28,7 +29,7 @@ public class GBC : HelperBase
     {
         Emu = Game.ProcessName switch
         {
-            "GSE" => new GSE(this),
+            "GSR" or "GSE" => new GSE(this),
             "gambatte_speedrun" => new GSR_qt(this),
             _ => throw new NotImplementedException(),
         };

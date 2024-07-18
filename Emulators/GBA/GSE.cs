@@ -11,8 +11,12 @@ namespace LiveSplit.EMUHELP.GBA
         internal GSE(HelperBase helper) : base(helper)
         {
             var game = Helper.Game;
-            ewram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GBA_EWRAM_PTR").Address;
-            iwram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GBA_IWRAM_PTR").Address;
+
+            // Maintain backwards compatibility after rename from GSR -> GSE
+            var ptr_prefix = helper.Game.ProcessName;
+
+            ewram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GBA_EWRAM_PTR").Address;
+            iwram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GBA_IWRAM_PTR").Address;
 
             if (ewram_pointer.IsZero() || iwram_pointer.IsZero())
                 throw new Exception();

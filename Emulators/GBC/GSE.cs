@@ -16,8 +16,11 @@ namespace LiveSplit.EMUHELP.GBC
             if (!game.Is64Bit())
                 throw new Exception();
 
-            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GB_WRAM_PTR").Address;
-            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GB_HRAM_PTR").Address;
+            // Maintain backwards compatibility after rename from GSR -> GSE
+            var ptr_prefix = helper.Game.ProcessName;
+
+            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GB_WRAM_PTR").Address;
+            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GB_HRAM_PTR").Address;
 
             if (base_wram_addr.IsZero() || base_iohram_addr.IsZero())
                 throw new Exception();
