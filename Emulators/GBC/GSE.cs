@@ -4,20 +4,20 @@ using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.EMUHELP.GBC
 {
-    internal class GSR : GBCBase
+    internal class GSE : GBCBase
     {
         private readonly IntPtr base_wram_addr;
         private readonly IntPtr base_iohram_addr;
 
-        internal GSR(HelperBase helper) : base(helper)
+        internal GSE(HelperBase helper) : base(helper)
         {
             var game = Helper.Game;
 
             if (!game.Is64Bit())
                 throw new Exception();
 
-            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSR_GB_WRAM_PTR").Address;
-            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSR_GB_HRAM_PTR").Address;
+            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GB_WRAM_PTR").Address;
+            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GB_HRAM_PTR").Address;
 
             if (base_wram_addr.IsZero() || base_iohram_addr.IsZero())
                 throw new Exception();
@@ -25,7 +25,7 @@ namespace LiveSplit.EMUHELP.GBC
             wram_base = game.ReadPointer(base_wram_addr);
             iohram_base = game.ReadPointer(base_iohram_addr) - 0x80;
 
-            Debugs.Info("  => Hooked to emulator: GSR");
+            Debugs.Info("  => Hooked to emulator: GSE");
 
             if (wram_base != IntPtr.Zero && iohram_base != IntPtr.Zero)
             {

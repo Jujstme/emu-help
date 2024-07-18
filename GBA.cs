@@ -20,7 +20,7 @@ public class GBA : HelperBase
             "retroarch",
             "EmuHawk",
             "mednafen",
-            "GSR",
+            "GSE",
         };
 
         GameProcess = new ProcessHook(ProcessNames);
@@ -40,7 +40,7 @@ public class GBA : HelperBase
             "retroarch" => new Retroarch(this),
             "EmuHawk" => new EmuHawk(this),
             "mednafen" => new Mednafen(this),
-            "GSR" => new GSR(this),
+            "GSE" => new GSE(this),
             _ => throw new NotImplementedException(),
         };
     }

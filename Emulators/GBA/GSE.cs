@@ -4,15 +4,15 @@ using System;
 
 namespace LiveSplit.EMUHELP.GBA
 {
-    internal class GSR : GBABase
+    internal class GSE : GBABase
     {
         private readonly IntPtr ewram_pointer;
         private readonly IntPtr iwram_pointer;
-        internal GSR(HelperBase helper) : base(helper)
+        internal GSE(HelperBase helper) : base(helper)
         {
             var game = Helper.Game;
-            ewram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSR_GBA_EWRAM_PTR").Address;
-            iwram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSR_GBA_IWRAM_PTR").Address;
+            ewram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GBA_EWRAM_PTR").Address;
+            iwram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSE_GBA_IWRAM_PTR").Address;
 
             if (ewram_pointer.IsZero() || iwram_pointer.IsZero())
                 throw new Exception();
@@ -20,7 +20,7 @@ namespace LiveSplit.EMUHELP.GBA
             ewram = game.ReadPointer(ewram_pointer);
             iwram = game.ReadPointer(iwram_pointer);
 
-            Debugs.Info("  => Hooked to emulator: GSR");
+            Debugs.Info("  => Hooked to emulator: GSE");
             Debugs.Info($"  => EWRAM address found at 0x{ewram.ToString("X")}");
             Debugs.Info($"  => IWRAM address found at 0x{iwram.ToString("X")}");
         }
