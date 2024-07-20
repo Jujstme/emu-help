@@ -12,11 +12,11 @@ namespace LiveSplit.EMUHELP.GBA
         {
             var game = Helper.Game;
 
-            // Maintain backwards compatibility after rename from GSR -> GSE
-            var ptr_prefix = helper.Game.ProcessName;
+            string[] ewram_symbol_name = { "GSE_GBA_EWRAM_PTR", "GSR_GBA_EWRAM_PTR" };
+            string[] iwram_symbol_name = { "GSE_GBA_IWRAM_PTR", "GSR_GBA_IWRAM_PTR" };
 
-            ewram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GBA_EWRAM_PTR").Address;
-            iwram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GBA_IWRAM_PTR").Address;
+            ewram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => ewram_symbol_name.Contains(s.Name)).Address;
+            iwram_pointer = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => iwram_symbol_name.Contains(s.Name)).Address;
 
             if (ewram_pointer.IsZero() || iwram_pointer.IsZero())
                 throw new Exception();
@@ -31,16 +31,13 @@ namespace LiveSplit.EMUHELP.GBA
 
         internal override bool KeepAlive()
         {
-            if (Helper.Game.ReadPointer(ewram_pointer, out var ewram_addr) && Helper.Game.ReadPointer(iwram_pointer, out var iwram_addr))
-            {
-                ewram = ewram_addr;
-                iwram = iwram_addr;
-                return true;
-            }
-            else
-            {
+            if (!Helper.Game.ReadPointer(ewram_pointer, out var ewram_addr)
+                || !Helper.Game.ReadPointer(iwram_pointer, out var iwram_addr))
                 return false;
-            }
+            
+            ewram = ewram_addr;
+            iwram = iwram_addr;
+            return true;
         }
     }
 }

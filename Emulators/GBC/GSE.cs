@@ -16,11 +16,11 @@ namespace LiveSplit.EMUHELP.GBC
             if (!game.Is64Bit())
                 throw new Exception();
 
-            // Maintain backwards compatibility after rename from GSR -> GSE
-            var ptr_prefix = helper.Game.ProcessName;
+            string[] wram_symbol_name = { "GSE_GB_WRAM_PTR", "GSR_GB_WRAM_PTR" };
+            string[] iohram_symbol_name = { "GSE_GB_HRAM_PTR", "GSR_GB_HRAM_PTR" };
 
-            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GB_WRAM_PTR").Address;
-            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == ptr_prefix + "_GB_HRAM_PTR").Address;
+            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => wram_symbol_name.Contains(s.Name)).Address;
+            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => iohram_symbol_name.Contains(s.Name)).Address;
 
             if (base_wram_addr.IsZero() || base_iohram_addr.IsZero())
                 throw new Exception();
@@ -39,16 +39,13 @@ namespace LiveSplit.EMUHELP.GBC
 
         internal override bool KeepAlive()
         {
-            if (Helper.Game.ReadPointer(base_wram_addr, out var _wram_base) && Helper.Game.ReadPointer(base_iohram_addr, out var _iohram_base))
-            {
-                wram_base = _wram_base;
-                iohram_base = _iohram_base - 0x80;
-                return true;
-            }
-            else
-            {
+            if (!Helper.Game.ReadPointer(base_wram_addr, out var _wram_base)
+                || !Helper.Game.ReadPointer(base_iohram_addr, out var _iohram_base))
                 return false;
-            }
+            
+            wram_base = _wram_base;
+            iohram_base = _iohram_base - 0x80;
+            return true;
         }
     }
 }
