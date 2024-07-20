@@ -60,7 +60,7 @@
     <Compile Include="AutoSplitterScript\timer.cs" />
     <Compile Include="Common\DebugSymbols.cs" />
     <Compile Include="Common\EmuBase.cs" />
-    <Compile Include="Emulators\GBA\GSR.cs" />
+    <Compile Include="Emulators\GBA\GSE.cs" />
     <Compile Include="Emulators\GBC\GSR_qt.cs" />
     <Compile Include="HelperBase\Init.cs" />
     <Compile Include="HelperBase\Make.cs" />
@@ -74,7 +74,7 @@
     <Compile Include="Emulators\GBA\Retroarch.cs" />
     <Compile Include="Emulators\GBA\VisualBoyAdvance.cs" />
     <Compile Include="Emulators\GBC\Base.cs" />
-    <Compile Include="Emulators\GBC\GSR.cs" />
+    <Compile Include="Emulators\GBC\GSE.cs" />
     <Compile Include="Emulators\GCN\Base.cs" />
     <Compile Include="Emulators\GCN\Dolphin.cs" />
     <Compile Include="Emulators\GCN\Retroarch.cs" />

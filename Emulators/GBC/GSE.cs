@@ -4,20 +4,23 @@ using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.EMUHELP.GBC
 {
-    internal class GSR : GBCBase
+    internal class GSE : GBCBase
     {
         private readonly IntPtr base_wram_addr;
         private readonly IntPtr base_iohram_addr;
 
-        internal GSR(HelperBase helper) : base(helper)
+        internal GSE(HelperBase helper) : base(helper)
         {
             var game = Helper.Game;
 
             if (!game.Is64Bit())
                 throw new Exception();
 
-            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSR_GB_WRAM_PTR").Address;
-            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => s.Name == "GSR_GB_HRAM_PTR").Address;
+            string[] wram_symbol_name = { "GSE_GB_WRAM_PTR", "GSR_GB_WRAM_PTR" };
+            string[] iohram_symbol_name = { "GSE_GB_HRAM_PTR", "GSR_GB_HRAM_PTR" };
+
+            base_wram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => wram_symbol_name.Contains(s.Name)).Address;
+            base_iohram_addr = game.GetSymbols(game.MainModuleWow64Safe()).FirstOrDefault(s => iohram_symbol_name.Contains(s.Name)).Address;
 
             if (base_wram_addr.IsZero() || base_iohram_addr.IsZero())
                 throw new Exception();
@@ -25,7 +28,7 @@ namespace LiveSplit.EMUHELP.GBC
             wram_base = game.ReadPointer(base_wram_addr);
             iohram_base = game.ReadPointer(base_iohram_addr) - 0x80;
 
-            Debugs.Info("  => Hooked to emulator: GSR");
+            Debugs.Info("  => Hooked to emulator: GSE");
 
             if (wram_base != IntPtr.Zero && iohram_base != IntPtr.Zero)
             {
@@ -36,16 +39,13 @@ namespace LiveSplit.EMUHELP.GBC
 
         internal override bool KeepAlive()
         {
-            if (Helper.Game.ReadPointer(base_wram_addr, out var _wram_base) && Helper.Game.ReadPointer(base_iohram_addr, out var _iohram_base))
-            {
-                wram_base = _wram_base;
-                iohram_base = _iohram_base - 0x80;
-                return true;
-            }
-            else
-            {
+            if (!Helper.Game.ReadPointer(base_wram_addr, out var _wram_base)
+                || !Helper.Game.ReadPointer(base_iohram_addr, out var _iohram_base))
                 return false;
-            }
+            
+            wram_base = _wram_base;
+            iohram_base = _iohram_base - 0x80;
+            return true;
         }
     }
 }
