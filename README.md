@@ -1,3 +1,6 @@
+> [!WARNING]  
+> This project continues as [emu-help-v3](https://github.com/Jujstme/emu-help-v3). This repository won't be receiving new updates.
+
 # emu-help
 
 Emu-help is a C# library intended to provide easy access to memory addresses in console games being run via emulators.
